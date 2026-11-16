@@ -1,4 +1,6 @@
-import '../domain/entities/product.dart';
+import 'package:cartnova_app/features/products/domain/entities/product.dart';
+
+
 
 class ProductModel extends Product {
   const ProductModel({

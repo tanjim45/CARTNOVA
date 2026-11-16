@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:cartnova_app/features/products/models/product_model.dart';
+import 'package:cartnova_app/features/products/data/models/product_model.dart';
 import 'package:http/http.dart' as http;
 
 class ProductRemoteDataSource {
