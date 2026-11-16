@@ -1,4 +1,5 @@
 
+import 'package:cartnova_app/features/products/screens/product_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -130,8 +131,17 @@ class ProductListScreen extends ConsumerWidget {
                       price: product.price,
                       oldPrice: product.oldPrice,
                       rating: product.rating,
-                      onTap: () {},
-                      onWishlistTap: () {},
+                      onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailsScreen(
+                            product: product,
+                          ),
+                        ),
+                      );
+                    },
+                       onWishlistTap: () {},
                       onAddToCart: () {},
                     );
                   },
