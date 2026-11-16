@@ -36,8 +36,18 @@ class ProductCard extends StatelessWidget {
     return NumberFormat.currency(
       locale: 'en_BD',
       symbol: '৳',
-      decimalDigits: 2,
+      decimalDigits: 0,
     ).format(price);
+  }
+
+  bool get hasDiscount {
+    return oldPrice != null && oldPrice! > price;
+  }
+
+  int get discountPercentage {
+    if (!hasDiscount) return 0;
+
+    return (((oldPrice! - price) / oldPrice!) * 100).round();
   }
 
   @override
@@ -45,17 +55,15 @@ class ProductCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    final hasDiscount = oldPrice != null && oldPrice! > price;
-
     return Material(
       color: colors.surface,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: theme.dividerColor.withValues(alpha: 0.12),
             ),
@@ -63,16 +71,16 @@ class ProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Product Image Section
-              AspectRatio(
-                aspectRatio: 1.15,
+              // Product Image
+              Expanded(
+                flex: 6,
                 child: Stack(
                   children: [
                     Positioned.fill(
                       child: Container(
                         color: colors.surfaceContainerHighest
                             .withValues(alpha: 0.35),
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(14),
                         child: CachedNetworkImage(
                           imageUrl: imageUrl,
                           fit: BoxFit.contain,
@@ -86,7 +94,7 @@ class ProductCard extends StatelessWidget {
                           errorWidget: (context, url, error) {
                             return Icon(
                               Icons.image_not_supported_outlined,
-                              size: 38,
+                              size: 40,
                               color: colors.onSurfaceVariant,
                             );
                           },
@@ -97,22 +105,22 @@ class ProductCard extends StatelessWidget {
                     // Discount Badge
                     if (hasDiscount)
                       Positioned(
-                        top: 10,
-                        left: 10,
+                        top: 11,
+                        left: 11,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 5,
+                            horizontal: 10,
+                            vertical: 6,
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.error,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(9),
                           ),
                           child: Text(
-                            '-${(((oldPrice! - price) / oldPrice!) * 100).round()}%',
+                            '$discountPercentage% OFF',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -121,16 +129,17 @@ class ProductCard extends StatelessWidget {
 
                     // Wishlist Button
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      top: 10,
+                      right: 10,
                       child: Material(
                         color: colors.surface,
                         shape: const CircleBorder(),
+                        elevation: 2,
                         child: InkWell(
                           onTap: onWishlistTap,
                           customBorder: const CircleBorder(),
                           child: Padding(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(9),
                             child: Icon(
                               isWishlisted
                                   ? Icons.favorite_rounded
@@ -148,118 +157,122 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
 
-              // Product Information
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      category.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors.primary,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.7,
-                      ),
-                    ),
-
-                    const SizedBox(height: 5),
-
-                    Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Rating
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 17,
-                          color: AppColors.warning,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          rating.toStringAsFixed(1),
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            '($reviewCount)',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelSmall,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Price and Cart Button
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                formattedPrice,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: colors.primary,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              if (hasDiscount)
-                                Text(
-                                  NumberFormat.currency(
-                                    locale: 'en_BD',
-                                    symbol: '৳',
-                                    decimalDigits: 0,
-                                  ).format(oldPrice),
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    decoration:
-                                        TextDecoration.lineThrough,
-                                    color: colors.onSurfaceVariant,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-
-                        Material(
+              // Product Details
+              Expanded(
+                flex: 6,
+                child: Padding(
+                   padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: colors.primary,
-                          borderRadius: BorderRadius.circular(11),
-                          child: InkWell(
-                            onTap: onAddToCart,
-                            borderRadius: BorderRadius.circular(11),
-                            child: const Padding(
-                              padding: EdgeInsets.all(9),
-                              child: Icon(
-                                Icons.add_shopping_cart_rounded,
-                                size: 19,
-                                color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.7,
+                        ),
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                        ),
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 17,
+                            color: AppColors.warning,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            rating.toStringAsFixed(1),
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              '($reviewCount reviews)',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colors.onSurfaceVariant,
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+
+                      const Spacer(),
+
+                      // Price and Add to Cart
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  formattedPrice,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: colors.primary,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                if (hasDiscount)
+                                  Text(
+                                    NumberFormat.currency(
+                                      locale: 'en_BD',
+                                      symbol: '৳',
+                                      decimalDigits: 0,
+                                    ).format(oldPrice),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      decoration:
+                                          TextDecoration.lineThrough,
+                                      color: colors.onSurfaceVariant,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+
+                          Material(
+                            color: colors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                            child: InkWell(
+                              onTap: onAddToCart,
+                              borderRadius: BorderRadius.circular(12),
+                              child: const Padding(
+                                padding: EdgeInsets.all(10),
+                                child: Icon(
+                                  Icons.add_shopping_cart_rounded,
+                                  color: Colors.white,
+                                  size: 19,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
