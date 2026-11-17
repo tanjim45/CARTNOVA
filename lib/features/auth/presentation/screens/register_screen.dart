@@ -33,12 +33,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
   }
 
   @override
@@ -51,31 +56,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'Create Account',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        centerTitle: true,
       ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1100),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth >= 750;
 
-                  return isWide
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: _buildWelcomePanel(colors),
-                            ),
-                            const SizedBox(width: 50),
-                            Expanded(
+                  if (isWide) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: _buildWelcomePanel(colors),
+                        ),
+                        const SizedBox(width: 45),
+                        Expanded(
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: 460,
+                              ),
                               child: _buildRegisterForm(colors),
                             ),
-                          ],
-                        )
-                      : _buildRegisterForm(colors);
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: _buildRegisterForm(colors),
+                    ),
+                  );
                 },
               ),
             ),
@@ -87,13 +107,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildWelcomePanel(ColorScheme colors) {
     return Container(
-      height: 560,
-      padding: const EdgeInsets.all(35),
+      constraints: const BoxConstraints(minHeight: 620),
+      padding: const EdgeInsets.all(38),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             colors.primary,
-            colors.primary.withValues(alpha: 0.75),
+            colors.primary.withValues(alpha: 0.82),
+            colors.tertiary,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -104,73 +125,160 @@ class _RegisterScreenState extends State<RegisterScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.shopping_bag_rounded,
-            size: 65,
-            color: Colors.white,
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.17),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+              ),
+            ),
+            child: const Icon(
+              Icons.shopping_bag_rounded,
+              size: 43,
+              color: Colors.white,
+            ),
           ),
-          const SizedBox(height: 25),
+          const SizedBox(height: 35),
           const Text(
             'Join CartNova\nToday!',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 38,
-              fontWeight: FontWeight.bold,
+              fontSize: 42,
+              fontWeight: FontWeight.w800,
               height: 1.2,
+              letterSpacing: -1,
             ),
           ),
           const SizedBox(height: 18),
           Text(
-            'Create your account and discover a smarter, easier and more enjoyable shopping experience.',
+            'Create your account and discover a smarter, easier '
+            'and more enjoyable shopping experience.',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 16,
-              height: 1.6,
+              color: Colors.white.withValues(alpha: 0.88),
+              fontSize: 15,
+              height: 1.8,
             ),
           ),
-          const SizedBox(height: 30),
-          const Row(
-            children: [
-              Icon(Icons.verified_rounded, color: Colors.white),
-              SizedBox(width: 10),
-              Text(
-                'Everything you love in one place',
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
+          const SizedBox(height: 35),
+          _welcomeFeature(
+            Icons.shopping_bag_outlined,
+            'Discover products you love',
+          ),
+          const SizedBox(height: 18),
+          _welcomeFeature(
+            Icons.favorite_rounded,
+            'Save your favourite products',
+          ),
+          const SizedBox(height: 18),
+          _welcomeFeature(
+            Icons.local_shipping_rounded,
+            'Enjoy convenient ordering',
+          ),
+          const SizedBox(height: 35),
+          Container(
+            padding: const EdgeInsets.all(17),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.13),
+              borderRadius: BorderRadius.circular(17),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.verified_rounded,
+                  color: Colors.white,
+                  size: 25,
+                ),
+                SizedBox(width: 13),
+                Expanded(
+                  child: Text(
+                    'Everything you love in one place.',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _welcomeFeature(IconData icon, String title) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white, size: 21),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.92),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildRegisterForm(ColorScheme colors) {
+    final theme = Theme.of(context);
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Create Your Account',
-            style: TextStyle(
-              fontSize: 29,
-              fontWeight: FontWeight.bold,
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(19),
+              ),
+              child: Icon(
+                Icons.person_add_alt_1_rounded,
+                color: colors.primary,
+                size: 34,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 23),
+          Center(
+            child: Text(
+              'Create Your Account',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.6,
+              ),
+            ),
+          ),
+          const SizedBox(height: 9),
           Text(
             'Fill in your details to get started.',
-            style: TextStyle(color: colors.secondary),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 30),
 
           _buildLabel('Full Name'),
           TextFormField(
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.name],
             decoration: _inputDecoration(
               hint: 'Enter your full name',
-              icon: Icons.person_outline,
+              icon: Icons.person_outline_rounded,
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -183,12 +291,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 19),
 
           _buildLabel('Email Address'),
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.email],
             decoration: _inputDecoration(
               hint: 'Enter your email',
               icon: Icons.email_outlined,
@@ -206,12 +316,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 19),
 
           _buildLabel('Phone Number'),
           TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.telephoneNumber],
             decoration: _inputDecoration(
               hint: 'Enter your phone number',
               icon: Icons.phone_outlined,
@@ -227,16 +339,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 19),
 
           _buildLabel('Password'),
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.newPassword],
             decoration: _inputDecoration(
               hint: 'Create a password',
-              icon: Icons.lock_outline,
+              icon: Icons.lock_outline_rounded,
               suffix: IconButton(
+                tooltip: _obscurePassword
+                    ? 'Show password'
+                    : 'Hide password',
                 onPressed: () {
                   setState(() {
                     _obscurePassword = !_obscurePassword;
@@ -260,16 +377,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 19),
 
           _buildLabel('Confirm Password'),
           TextFormField(
             controller: _confirmPasswordController,
             obscureText: _obscureConfirmPassword,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.newPassword],
             decoration: _inputDecoration(
               hint: 'Confirm your password',
-              icon: Icons.lock_outline,
+              icon: Icons.lock_outline_rounded,
               suffix: IconButton(
+                tooltip: _obscureConfirmPassword
+                    ? 'Show password'
+                    : 'Hide password',
                 onPressed: () {
                   setState(() {
                     _obscureConfirmPassword =
@@ -294,7 +416,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 15),
 
           CheckboxListTile(
             value: _acceptTerms,
@@ -309,13 +431,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'I agree to the Terms & Conditions',
               style: TextStyle(fontSize: 13),
             ),
+            activeColor: colors.primary,
+            dense: true,
           ),
 
           const SizedBox(height: 18),
 
           SizedBox(
             width: double.infinity,
-            height: 54,
+            height: 55,
             child: FilledButton(
               onPressed: () {
                 if (!_formKey.currentState!.validate()) {
@@ -333,25 +457,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   'Registration API will be connected with Laravel later.',
                 );
               },
-              child: const Text(
-                'Create Account',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              style: FilledButton.styleFrom(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Icon(Icons.arrow_forward_rounded, size: 19),
+                ],
               ),
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
 
           Center(
             child: Wrap(
               alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   'Already have an account? ',
-                  style: TextStyle(color: colors.secondary),
+                  style: TextStyle(
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
                 TextButton(
                   onPressed: () => context.goNamed('login'),
@@ -363,6 +503,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 15),
         ],
       ),
     );
@@ -373,7 +514,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.only(bottom: 9),
       child: Text(
         label,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
       ),
     );
   }
@@ -383,12 +527,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required IconData icon,
     Widget? suffix,
   }) {
+    final colors = Theme.of(context).colorScheme;
+
     return InputDecoration(
       hintText: hint,
       prefixIcon: Icon(icon),
       suffixIcon: suffix,
+      filled: true,
+      fillColor: colors.surfaceContainerLow,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 18,
+      ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(
+          color: colors.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(
+          color: colors.primary,
+          width: 1.5,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(
+          color: colors.error,
+          width: 1.5,
+        ),
       ),
     );
   }

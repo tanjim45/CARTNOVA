@@ -1,3 +1,4 @@
+
 import '../entities/order.dart';
 
 abstract class CheckoutRepository {
@@ -5,5 +6,6 @@ abstract class CheckoutRepository {
     required String customerName,
     required String phone,
     required String address,
+    required String paymentMethod,
   });
 }

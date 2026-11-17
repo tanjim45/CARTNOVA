@@ -6,8 +6,6 @@ import 'package:cartnova_app/features/checkout/domain/entities/order.dart';
 import 'package:cartnova_app/features/checkout/domain/repositories/order_repository.dart';
 import 'package:cartnova_app/features/products/domain/entities/product.dart';
 
-
-
 class OrderRepositoryImpl implements OrderRepository {
   final OrderLocalDataSource localDataSource;
 
@@ -18,14 +16,12 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<void> saveOrder(Order order) async {
     final orderModel = OrderModel.fromEntity(order);
-
     await localDataSource.saveOrder(orderModel);
   }
 
   @override
   Future<List<Order>> getOrders() async {
     final orderModels = await localDataSource.getOrders();
-
     return orderModels.map(_toEntity).toList();
   }
 
@@ -83,6 +79,7 @@ class OrderRepositoryImpl implements OrderRepository {
       subtotal: model.subtotal,
       deliveryCharge: model.deliveryCharge,
       total: model.total,
+      paymentMethod: model.paymentMethod,
       status: OrderStatus.values.firstWhere(
         (value) => value.name == model.status,
         orElse: () => OrderStatus.pending,

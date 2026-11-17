@@ -4,6 +4,7 @@ import 'package:cartnova_app/features/checkout/data/repositories/checkout_reposi
 import 'package:cartnova_app/features/checkout/domain/entities/order.dart';
 import 'package:cartnova_app/features/checkout/domain/repositories/checkout_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'order_provider.dart';
 
 final checkoutRepositoryProvider = Provider<CheckoutRepository>((ref) {
@@ -19,13 +20,13 @@ final checkoutRepositoryProvider = Provider<CheckoutRepository>((ref) {
 class CheckoutNotifier extends StateNotifier<AsyncValue<Order?>> {
   final CheckoutRepository _repository;
 
-  CheckoutNotifier(this._repository)
-      : super(const AsyncData(null));
+  CheckoutNotifier(this._repository) : super(const AsyncData(null));
 
   Future<void> placeOrder({
     required String customerName,
     required String phone,
     required String address,
+    required String paymentMethod,
   }) async {
     state = const AsyncLoading();
 
@@ -34,6 +35,7 @@ class CheckoutNotifier extends StateNotifier<AsyncValue<Order?>> {
         customerName: customerName,
         phone: phone,
         address: address,
+        paymentMethod: paymentMethod,
       );
 
       state = AsyncData(order);

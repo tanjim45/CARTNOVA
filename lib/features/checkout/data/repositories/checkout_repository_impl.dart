@@ -22,6 +22,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     required String customerName,
     required String phone,
     required String address,
+    required String paymentMethod,
   }) async {
     final items = cartRepository.getCartItems();
 
@@ -45,14 +46,13 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
       subtotal: subtotal,
       deliveryCharge: _deliveryCharge,
       total: total,
+      paymentMethod: paymentMethod,
       status: OrderStatus.pending,
       createdAt: DateTime.now(),
     );
 
-    // Save order to Hive first.
     await orderRepository.saveOrder(order);
 
-    // Clear cart only after successful saving.
     cartRepository.clearCart();
 
     return order;

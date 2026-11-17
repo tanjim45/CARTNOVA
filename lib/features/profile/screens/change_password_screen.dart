@@ -20,6 +20,51 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _hideNewPassword = true;
   bool _hideConfirmPassword = true;
 
+  int get _passwordStrength {
+    final password = _newPasswordController.text;
+
+    if (password.isEmpty) return 0;
+
+    int score = 0;
+
+    if (password.length >= 8) score++;
+    if (RegExp(r'[A-Z]').hasMatch(password)) score++;
+    if (RegExp(r'[0-9]').hasMatch(password)) score++;
+    if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) score++;
+
+    return score;
+  }
+
+  String get _strengthLabel {
+    switch (_passwordStrength) {
+      case 1:
+        return 'Weak';
+      case 2:
+        return 'Fair';
+      case 3:
+        return 'Good';
+      case 4:
+        return 'Strong';
+      default:
+        return 'Enter a password';
+    }
+  }
+
+  Color _strengthColor(ColorScheme colors) {
+    switch (_passwordStrength) {
+      case 1:
+        return Colors.red;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.blue;
+      case 4:
+        return Colors.green;
+      default:
+        return colors.outlineVariant;
+    }
+  }
+
   @override
   void dispose() {
     _currentPasswordController.dispose();
@@ -34,8 +79,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Password UI validation successful! Backend integration is pending.',
+          'Password validation successful! Backend integration is pending.',
         ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
 
@@ -43,6 +89,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     _currentPasswordController.clear();
     _newPasswordController.clear();
     _confirmPasswordController.clear();
+
+    setState(() {
+      _hideCurrentPassword = true;
+      _hideNewPassword = true;
+      _hideConfirmPassword = true;
+    });
   }
 
   @override
@@ -57,103 +109,268 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Card(
-              elevation: 0,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      CircleAvatar(
-                        radius: 38,
-                        backgroundColor: colors.primaryContainer,
-                        child: Icon(
-                          Icons.lock_reset_rounded,
-                          size: 42,
-                          color: colors.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Secure Your Account',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Create a strong password to keep your CartNova account safe.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 750;
 
-                      _passwordField(
-                        controller: _currentPasswordController,
-                        label: 'Current Password',
-                        obscureText: _hideCurrentPassword,
-                        onToggle: () {
-                          setState(() {
-                            _hideCurrentPassword = !_hideCurrentPassword;
-                          });
-                        },
+          return Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isWide ? 32 : 18),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 850),
+                child: isWide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: _buildSecurityInfo(theme, colors),
+                          ),
+                          const SizedBox(width: 28),
+                          Expanded(
+                            child: _buildPasswordForm(theme, colors),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          _buildSecurityInfo(theme, colors),
+                          const SizedBox(height: 24),
+                          _buildPasswordForm(theme, colors),
+                        ],
                       ),
-
-                      const SizedBox(height: 20),
-
-                      _passwordField(
-                        controller: _newPasswordController,
-                        label: 'New Password',
-                        obscureText: _hideNewPassword,
-                        onToggle: () {
-                          setState(() {
-                            _hideNewPassword = !_hideNewPassword;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      _passwordField(
-                        controller: _confirmPasswordController,
-                        label: 'Confirm New Password',
-                        obscureText: _hideConfirmPassword,
-                        onToggle: () {
-                          setState(() {
-                            _hideConfirmPassword = !_hideConfirmPassword;
-                          });
-                        },
-                        confirm: true,
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      FilledButton.icon(
-                        onPressed: _updatePassword,
-                        icon: const Icon(Icons.lock_outline_rounded),
-                        label: const Text('Update Password'),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSecurityInfo(
+    ThemeData theme,
+    ColorScheme colors,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colors.primary,
+            colors.secondary,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.shield_outlined,
+              color: Colors.white,
+              size: 42,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Secure Your Account',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Protect your CartNova account with a strong and unique password.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 25),
+          _securityTip(
+            Icons.check_circle_outline_rounded,
+            'At least 8 characters',
+          ),
+          const SizedBox(height: 13),
+          _securityTip(
+            Icons.check_circle_outline_rounded,
+            'Use uppercase and numbers',
+          ),
+          const SizedBox(height: 13),
+          _securityTip(
+            Icons.check_circle_outline_rounded,
+            'Add special characters',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _securityTip(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white, size: 19),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordForm(
+    ThemeData theme,
+    ColorScheme colors,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colors.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Update Password',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              'Enter your current and new password below.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            _passwordField(
+              controller: _currentPasswordController,
+              label: 'Current Password',
+              obscureText: _hideCurrentPassword,
+              onToggle: () {
+                setState(() {
+                  _hideCurrentPassword = !_hideCurrentPassword;
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+
+            _passwordField(
+              controller: _newPasswordController,
+              label: 'New Password',
+              obscureText: _hideNewPassword,
+              onToggle: () {
+                setState(() {
+                  _hideNewPassword = !_hideNewPassword;
+                });
+              },
+              onChanged: (_) => setState(() {}),
+            ),
+
+            if (_newPasswordController.text.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _buildPasswordStrength(colors),
+            ],
+
+            const SizedBox(height: 20),
+
+            _passwordField(
+              controller: _confirmPasswordController,
+              label: 'Confirm New Password',
+              obscureText: _hideConfirmPassword,
+              onToggle: () {
+                setState(() {
+                  _hideConfirmPassword = !_hideConfirmPassword;
+                });
+              },
+              confirm: true,
+            ),
+
+            const SizedBox(height: 28),
+
+            FilledButton.icon(
+              onPressed: _updatePassword,
+              icon: const Icon(Icons.lock_reset_rounded),
+              label: const Text('Update Password'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 17),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordStrength(ColorScheme colors) {
+    final strength = _passwordStrength;
+    final strengthColor = _strengthColor(colors);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Password strength',
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontSize: 12,
+              ),
+            ),
+            Text(
+              _strengthLabel,
+              style: TextStyle(
+                color: strengthColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: List.generate(4, (index) {
+            return Expanded(
+              child: Container(
+                height: 5,
+                margin: EdgeInsets.only(right: index == 3 ? 0 : 5),
+                decoration: BoxDecoration(
+                  color: index < strength
+                      ? strengthColor
+                      : colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
     );
   }
 
@@ -163,17 +380,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     required bool obscureText,
     required VoidCallback onToggle,
     bool confirm = false,
+    ValueChanged<String>? onChanged,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: const Icon(Icons.lock_outline_rounded),
         suffixIcon: IconButton(
+          tooltip: obscureText ? 'Show password' : 'Hide password',
           onPressed: onToggle,
           icon: Icon(
-            obscureText ? Icons.visibility_off : Icons.visibility,
+            obscureText
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
           ),
         ),
         border: OutlineInputBorder(
@@ -185,10 +407,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           return 'Please enter $label';
         }
 
-        if (!confirm && controller == _newPasswordController) {
-          if (value.length < 8) {
-            return 'Password must be at least 8 characters';
-          }
+        if (controller == _newPasswordController &&
+            value.length < 8) {
+          return 'Password must be at least 8 characters';
         }
 
         if (confirm && value != _newPasswordController.text) {

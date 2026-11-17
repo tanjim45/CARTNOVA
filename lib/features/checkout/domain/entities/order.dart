@@ -1,3 +1,4 @@
+
 import '../../../cart/domain/entities/cart_item.dart';
 
 enum OrderStatus {
@@ -17,6 +18,7 @@ class Order {
   final double subtotal;
   final double deliveryCharge;
   final double total;
+  final String paymentMethod;
   final OrderStatus status;
   final DateTime createdAt;
 
@@ -29,6 +31,7 @@ class Order {
     required this.subtotal,
     required this.deliveryCharge,
     required this.total,
+    this.paymentMethod = 'Cash on Delivery',
     required this.status,
     required this.createdAt,
   });
