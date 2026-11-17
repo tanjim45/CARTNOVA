@@ -1,4 +1,5 @@
 import 'package:cartnova_app/features/cart/providers/cart_provider.dart';
+import 'package:cartnova_app/features/wishlist/providers/wishlist_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,17 +27,58 @@ class _ProductDetailsScreenState
   Widget build(BuildContext context) {
     final product = widget.product;
     final colors = Theme.of(context).colorScheme;
+    final wishlistState = ref.watch(wishlistProvider);
+
+    final isWishlisted = wishlistState.valueOrNull?.any(
+      (item) => item.id == product.id,
+    ) ??
+    false;
     final images = product.images.isNotEmpty
         ? product.images
         : [product.thumbnail];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Product Details',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
+                appBar: AppBar(
+            title: const Text(
+              'Product Details',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            actions: [
+              IconButton(
+                tooltip: isWishlisted
+                    ? 'Remove from Wishlist'
+                    : 'Add to Wishlist',
+                icon: Icon(
+                  isWishlisted
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: isWishlisted ? Colors.red : null,
+                ),
+                onPressed: () async {
+                  final notifier = ref.read(wishlistProvider.notifier);
+
+                  if (isWishlisted) {
+                    await notifier.removeFromWishlist(product.id);
+                  } else {
+                    await notifier.addToWishlist(product);
+                  }
+
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isWishlisted
+                            ? 'Removed from Wishlist'
+                            : 'Added to Wishlist',
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 800;

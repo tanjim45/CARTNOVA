@@ -1,14 +1,18 @@
 
 import 'package:uuid/uuid.dart';
+
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/checkout_repository.dart';
+import '../../domain/repositories/order_repository.dart';
 import '../../../cart/domain/repositories/cart_repository.dart';
 
 class CheckoutRepositoryImpl implements CheckoutRepository {
   final CartRepository cartRepository;
+  final OrderRepository orderRepository;
 
   CheckoutRepositoryImpl({
     required this.cartRepository,
+    required this.orderRepository,
   });
 
   static const double _deliveryCharge = 60.0;
@@ -45,6 +49,10 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
       createdAt: DateTime.now(),
     );
 
+    // Save order to Hive first.
+    await orderRepository.saveOrder(order);
+
+    // Clear cart only after successful saving.
     cartRepository.clearCart();
 
     return order;

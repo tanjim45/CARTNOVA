@@ -1,4 +1,6 @@
 
+import 'package:cartnova_app/features/checkout/screens/order_history_screen.dart';
+import 'package:cartnova_app/features/wishlist/screens/wishlist_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,6 +30,36 @@ class HomeScreen extends ConsumerWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+
+              // Wishlist
+              IconButton(
+                tooltip: 'My Wishlist',
+                icon: const Icon(
+                  Icons.favorite_border_rounded,
+                  color: Colors.red,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const WishlistScreen(),
+                    ),
+                  );
+                },
+              ),
+
+                      IconButton(
+              tooltip: 'My Orders',
+              icon: const Icon(Icons.receipt_long_outlined),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const OrderHistoryScreen(),
+                  ),
+                );
+              },
+            ),
           // Cart Icon with Item Count
           Padding(
             padding: const EdgeInsets.only(right: 8),

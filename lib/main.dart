@@ -1,3 +1,4 @@
+import 'package:cartnova_app/core/database/hive_database.dart';
 import 'package:cartnova_app/features/home/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,8 +7,9 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await HiveDatabase.init();
 
   runApp(
     const ProviderScope(

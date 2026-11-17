@@ -1,5 +1,6 @@
 
 import 'package:cartnova_app/features/cart/providers/cart_provider.dart';
+import 'package:cartnova_app/features/checkout/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/checkout_provider.dart';
@@ -29,6 +30,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(checkoutProvider, (previous, next) {
+  if (previous?.isLoading == true &&
+      next.valueOrNull != null) {
+    ref.invalidate(orderHistoryProvider);
+  }
+});
     final cartItems = ref.watch(cartProvider);
     final checkoutState = ref.watch(checkoutProvider);
 
