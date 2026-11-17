@@ -1,14 +1,14 @@
 import 'package:cartnova_app/core/database/hive_database.dart';
-import 'package:cartnova_app/features/home/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await HiveDatabase.init();
 
   runApp(
@@ -25,7 +25,7 @@ class CartNovaApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'CartNova',
       debugShowCheckedModeBanner: false,
 
@@ -43,7 +43,7 @@ class CartNovaApp extends ConsumerWidget {
 
       themeMode: themeMode,
 
-      home: const HomeScreen(),
+      routerConfig: appRouter,
     );
   }
 }
