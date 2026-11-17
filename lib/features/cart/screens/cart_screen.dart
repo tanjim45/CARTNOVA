@@ -1,4 +1,5 @@
 
+import 'package:cartnova_app/features/checkout/screens/checkout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -195,14 +196,13 @@ class CartScreen extends ConsumerWidget {
                           height: 52,
                           child: ElevatedButton(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Checkout feature coming next!',
-                                  ),
-                                ),
-                              );
-                            },
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CheckoutScreen(),
+                              ),
+                            );
+                          },
                             child: const Text('Proceed to Checkout'),
                           ),
                         ),

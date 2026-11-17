@@ -46,6 +46,11 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     state = _repository.getCartItems();
   }
 
+  
+  List<CartItem> get currentItems {
+  return List.unmodifiable(state);
+}
+
   double get subtotal {
     return state.fold(
       0,
