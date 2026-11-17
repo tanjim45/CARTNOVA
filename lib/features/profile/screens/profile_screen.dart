@@ -1,5 +1,6 @@
 
 import 'package:cartnova_app/features/profile/screens/address_screen.dart';
+import 'package:cartnova_app/features/profile/screens/change_password_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -186,12 +187,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
 
-              _buildSettingTile(
-                icon: Icons.lock_outline_rounded,
-                title: 'Change Password',
-                subtitle: 'Update your account password',
-                onTap: () => _showMessage('Password update coming soon!'),
-              ),
+                            _buildSettingTile(
+                  icon: Icons.lock_outline_rounded,
+                  title: 'Change Password',
+                  subtitle: 'Update your account password',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ChangePasswordScreen(),
+                      ),
+                    );
+                  },
+                ),
 
               _buildSettingTile(
                 icon: Icons.privacy_tip_outlined,

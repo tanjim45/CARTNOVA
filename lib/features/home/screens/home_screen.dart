@@ -3,6 +3,7 @@ import 'package:cartnova_app/features/checkout/screens/order_history_screen.dart
 import 'package:cartnova_app/features/wishlist/screens/wishlist_screen.dart';
 import 'package:cartnova_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:cartnova_app/features/profile/screens/profile_screen.dart';
+import 'package:cartnova_app/features/profile/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -247,9 +248,26 @@ class HomeScreen extends ConsumerWidget {
 
               const Divider(indent: 16, endIndent: 16),
 
+              // App Settings
+              ListTile(
+                leading: const Icon(Icons.tune_rounded),
+                title: const Text('App Settings'),
+                subtitle: const Text('Notifications, language & privacy'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+
               // Theme Settings
               ListTile(
-                leading: const Icon(Icons.settings_outlined),
+                leading: const Icon(Icons.palette_outlined),
                 title: const Text('Theme Settings'),
                 subtitle: const Text('Light, Dark & System'),
                 onTap: () {
