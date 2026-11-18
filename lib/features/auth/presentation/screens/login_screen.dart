@@ -1,21 +1,25 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginScreen extends StatefulWidget {
+import '../../providers/auth_provider.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _rememberMe = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -37,6 +41,41 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
   }
+
+  
+Future<void> _login() async {
+  if (!_formKey.currentState!.validate()) return;
+
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    await ref.read(authRepositoryProvider).login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+   
+    context.go('/');
+
+  } catch (e) {
+    if (!mounted) return;
+
+    _showMessage(
+      e.toString().replaceFirst('Exception: ', ''),
+    );
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -289,6 +328,9 @@ class _LoginScreenState extends State<LoginScreen> {
             obscureText: _obscurePassword,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.password],
+            onFieldSubmitted: (_) {
+              if (!_isLoading) _login();
+            },
             decoration: _inputDecoration(
               hint: 'Enter your password',
               icon: Icons.lock_outline_rounded,
@@ -362,33 +404,39 @@ class _LoginScreenState extends State<LoginScreen> {
             width: double.infinity,
             height: 55,
             child: FilledButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _showMessage(
-                    'Login API will be connected with Laravel later.',
-                  );
-                }
-              },
+              onPressed: _isLoading ? null : _login,
               style: FilledButton.styleFrom(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Sign In',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 23,
+                      width: 23,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Sign In',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 19,
+                        ),
+                      ],
                     ),
-                  ),
-                  SizedBox(width: 10),
-                  Icon(Icons.arrow_forward_rounded, size: 19),
-                ],
-              ),
             ),
           ),
 

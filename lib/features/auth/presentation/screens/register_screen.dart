@@ -1,15 +1,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class RegisterScreen extends StatefulWidget {
+import '../../providers/auth_provider.dart';
+
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
@@ -21,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptTerms = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -44,6 +48,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       );
+  }
+
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (!_acceptTerms) {
+      _showMessage('Please accept Terms & Conditions.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await ref.read(authRepositoryProvider).register(
+            name: _nameController.text.trim(),
+            email: _emailController.text.trim(),
+            phone: _phoneController.text.trim(),
+            password: _passwordController.text,
+            passwordConfirmation: _confirmPasswordController.text,
+          );
+
+      if (!mounted) return;
+
+      _showMessage('Registration successful!');
+
+      context.goNamed('home');
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        e.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -370,8 +417,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               if (value == null || value.isEmpty) {
                 return 'Please create a password';
               }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
+              if (value.length < 8) {
+                return 'Password must be at least 8 characters';
               }
               return null;
             },
@@ -385,6 +432,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             obscureText: _obscureConfirmPassword,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.newPassword],
+            onFieldSubmitted: (_) {
+              if (!_isLoading) _register();
+            },
             decoration: _inputDecoration(
               hint: 'Confirm your password',
               icon: Icons.lock_outline_rounded,
@@ -441,42 +491,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: double.infinity,
             height: 55,
             child: FilledButton(
-              onPressed: () {
-                if (!_formKey.currentState!.validate()) {
-                  return;
-                }
-
-                if (!_acceptTerms) {
-                  _showMessage(
-                    'Please accept Terms & Conditions.',
-                  );
-                  return;
-                }
-
-                _showMessage(
-                  'Registration API will be connected with Laravel later.',
-                );
-              },
+              onPressed: _isLoading ? null : _register,
               style: FilledButton.styleFrom(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Create Account',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 23,
+                      width: 23,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Create Account',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Icon(Icons.arrow_forward_rounded, size: 19),
+                      ],
                     ),
-                  ),
-                  SizedBox(width: 10),
-                  Icon(Icons.arrow_forward_rounded, size: 19),
-                ],
-              ),
             ),
           ),
 
