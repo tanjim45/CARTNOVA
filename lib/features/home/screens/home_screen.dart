@@ -1,9 +1,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme_provider.dart';
-import '../../auth/presentation/screens/login_screen.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../cart/providers/cart_provider.dart';
 import '../../cart/screens/cart_screen.dart';
 import '../../checkout/screens/order_history_screen.dart';
@@ -138,13 +139,13 @@ class HomeScreen extends ConsumerWidget {
         child: SafeArea(
           child: Column(
             children: [
-              _DrawerHeader(),
+              const _DrawerHeader(),
 
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
                   children: [
-                    _DrawerSectionTitle(title: 'ACCOUNT'),
+                    const _DrawerSectionTitle(title: 'ACCOUNT'),
 
                     _DrawerMenuTile(
                       icon: Icons.person_outline_rounded,
@@ -202,7 +203,7 @@ class HomeScreen extends ConsumerWidget {
                     const Divider(),
                     const SizedBox(height: 12),
 
-                    _DrawerSectionTitle(title: 'PREFERENCES'),
+                    const _DrawerSectionTitle(title: 'PREFERENCES'),
 
                     _DrawerMenuTile(
                       icon: Icons.tune_rounded,
@@ -228,7 +229,7 @@ class HomeScreen extends ConsumerWidget {
                     const Divider(),
                     const SizedBox(height: 12),
 
-                    _DrawerSectionTitle(title: 'MORE'),
+                    const _DrawerSectionTitle(title: 'MORE'),
 
                     _DrawerMenuTile(
                       icon: Icons.logout_rounded,
@@ -236,7 +237,7 @@ class HomeScreen extends ConsumerWidget {
                       subtitle: 'Sign out of your account',
                       iconColor: Colors.redAccent,
                       titleColor: Colors.redAccent,
-                      onTap: () => _showLogoutDialog(context),
+                      onTap: () => _showLogoutDialog(context, ref),
                     ),
                   ],
                 ),
@@ -402,7 +403,10 @@ class HomeScreen extends ConsumerWidget {
     Navigator.pop(context);
   }
 
-  static void _showLogoutDialog(BuildContext context) {
+  static void _showLogoutDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     Navigator.pop(context);
 
     showDialog(
@@ -428,16 +432,24 @@ class HomeScreen extends ConsumerWidget {
                 backgroundColor: Colors.redAccent,
                 foregroundColor: Colors.white,
               ),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(dialogContext);
 
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const LoginScreen(),
-                  ),
-                  (route) => false,
-                );
+                try {
+                  await ref.read(authRepositoryProvider).logout();
+
+                  if (!context.mounted) return;
+
+                  context.go('/login');
+                } catch (e) {
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Logout failed: ${e.toString()}'),
+                    ),
+                  );
+                }
               },
               child: const Text('Logout'),
             ),
@@ -573,7 +585,8 @@ class _DrawerMenuTile extends StatelessWidget {
           height: 40,
           width: 40,
           decoration: BoxDecoration(
-            color: (iconColor ?? colorScheme.primary).withValues(alpha: 0.10),
+            color: (iconColor ?? colorScheme.primary)
+                .withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(

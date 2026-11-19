@@ -26,17 +26,56 @@ class AuthRepositoryImpl implements AuthRepository {
     );
   }
 
-  Future<User> _saveAuthData(Map<String, dynamic> response) async {
-    final data = response['data'] as Map<String, dynamic>;
-    final token = data['token'] as String;
-    final userJson = data['user'] as Map<String, dynamic>;
+  // Extract User Data from different API response structures
+  Map<String, dynamic> _extractUserJson(
+    Map<String, dynamic> response,
+  ) {
+    final data = response['data'];
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
+    if (data is Map) {
+      final user = data['user'];
 
-    return _mapUser(userJson);
+      if (user is Map) {
+        return Map<String, dynamic>.from(user);
+      }
+
+      return Map<String, dynamic>.from(data);
+    }
+
+    final user = response['user'];
+
+    if (user is Map) {
+      return Map<String, dynamic>.from(user);
+    }
+
+    return response;
   }
 
+  // Save Login/Register Data
+  Future<User> _saveAuthData(
+    Map<String, dynamic> response,
+  ) async {
+    final data = response['data'];
+
+    if (data is! Map) {
+      throw Exception('Invalid authentication response.');
+    }
+
+    final token = data['token'];
+    final user = data['user'];
+
+    if (token is! String || user is! Map) {
+      throw Exception('Authentication token or user data missing.');
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(_tokenKey, token);
+
+    return _mapUser(Map<String, dynamic>.from(user));
+  }
+
+  // Login
   @override
   Future<User> login({
     required String email,
@@ -50,6 +89,7 @@ class AuthRepositoryImpl implements AuthRepository {
     return _saveAuthData(response);
   }
 
+  // Register
   @override
   Future<User> register({
     required String name,
@@ -69,6 +109,7 @@ class AuthRepositoryImpl implements AuthRepository {
     return _saveAuthData(response);
   }
 
+  // Get Logged-in User
   @override
   Future<User> getUser() async {
     final prefs = await SharedPreferences.getInstance();
@@ -80,9 +121,60 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final response = await remoteDataSource.getUser(token);
 
-    return _mapUser(response);
+    final userJson = _extractUserJson(response);
+
+    return _mapUser(userJson);
   }
 
+  // Update Profile
+  @override
+  Future<User> updateProfile({
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_tokenKey);
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Please login first.');
+    }
+
+    final response = await remoteDataSource.updateProfile(
+      token: token,
+      name: name,
+      email: email,
+      phone: phone,
+    );
+
+    final userJson = _extractUserJson(response);
+
+    return _mapUser(userJson);
+  }
+
+  // Change Password
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String passwordConfirmation,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_tokenKey);
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Please login first.');
+    }
+
+    await remoteDataSource.changePassword(
+      token: token,
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+      passwordConfirmation: passwordConfirmation,
+    );
+  }
+
+  // Logout
   @override
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();

@@ -88,6 +88,52 @@ class AuthRemoteDataSource {
     return _handleResponse(response);
   }
 
+  // Update Profile API
+  Future<Map<String, dynamic>> updateProfile({
+    required String token,
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    final response = await client.put(
+      Uri.parse('${ApiConstants.baseUrl}/user/profile'),
+      headers: {
+        ..._headers,
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'phone': phone,
+      }),
+    );
+
+    return _handleResponse(response);
+  }
+
+  // Change Password API
+  Future<Map<String, dynamic>> changePassword({
+    required String token,
+    required String currentPassword,
+    required String newPassword,
+    required String passwordConfirmation,
+  }) async {
+    final response = await client.put(
+      Uri.parse('${ApiConstants.baseUrl}/user/change-password'),
+      headers: {
+        ..._headers,
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'current_password': currentPassword,
+        'password': newPassword,
+        'password_confirmation': passwordConfirmation,
+      }),
+    );
+
+    return _handleResponse(response);
+  }
+
   Future<Map<String, dynamic>> logout(String token) async {
     final response = await client.post(
       Uri.parse(ApiConstants.logout),

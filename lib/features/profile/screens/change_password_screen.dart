@@ -1,15 +1,19 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ChangePasswordScreen extends StatefulWidget {
+import '../../auth/providers/auth_provider.dart';
+
+class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
   @override
-  State<ChangePasswordScreen> createState() =>
+  ConsumerState<ChangePasswordScreen> createState() =>
       _ChangePasswordScreenState();
 }
 
-class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
+class _ChangePasswordScreenState
+    extends ConsumerState<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _currentPasswordController = TextEditingController();
@@ -19,6 +23,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _hideCurrentPassword = true;
   bool _hideNewPassword = true;
   bool _hideConfirmPassword = true;
+  bool _isLoading = false;
 
   int get _passwordStrength {
     final password = _newPasswordController.text;
@@ -30,7 +35,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (password.length >= 8) score++;
     if (RegExp(r'[A-Z]').hasMatch(password)) score++;
     if (RegExp(r'[0-9]').hasMatch(password)) score++;
-    if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) score++;
+    if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
+      score++;
+    }
 
     return score;
   }
@@ -73,28 +80,63 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
-  void _updatePassword() {
+  // Change Password API
+  Future<void> _updatePassword() async {
+    if (_isLoading) return;
+
     if (!_formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Password validation successful! Backend integration is pending.',
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-
-    _formKey.currentState!.reset();
-    _currentPasswordController.clear();
-    _newPasswordController.clear();
-    _confirmPasswordController.clear();
-
     setState(() {
-      _hideCurrentPassword = true;
-      _hideNewPassword = true;
-      _hideConfirmPassword = true;
+      _isLoading = true;
     });
+
+    try {
+      await ref.read(authRepositoryProvider).changePassword(
+            currentPassword: _currentPasswordController.text,
+            newPassword: _newPasswordController.text,
+            passwordConfirmation: _confirmPasswordController.text,
+          );
+
+      if (!mounted) return;
+
+      _currentPasswordController.clear();
+      _newPasswordController.clear();
+      _confirmPasswordController.clear();
+
+      _formKey.currentState!.reset();
+
+      setState(() {
+        _hideCurrentPassword = true;
+        _hideNewPassword = true;
+        _hideConfirmPassword = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password changed successfully!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -313,9 +355,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             const SizedBox(height: 28),
 
             FilledButton.icon(
-              onPressed: _updatePassword,
-              icon: const Icon(Icons.lock_reset_rounded),
-              label: const Text('Update Password'),
+              onPressed: _isLoading ? null : _updatePassword,
+              icon: _isLoading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.lock_reset_rounded),
+              label: Text(
+                _isLoading ? 'Updating...' : 'Update Password',
+              ),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 17),
               ),

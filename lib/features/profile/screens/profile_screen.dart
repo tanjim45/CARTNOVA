@@ -2,20 +2,62 @@
 import 'package:cartnova_app/features/profile/screens/address_screen.dart';
 import 'package:cartnova_app/features/profile/screens/change_password_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProfileScreen extends StatefulWidget {
+import '../../auth/providers/auth_provider.dart';
+import '../../auth/domain/entities/user.dart';
+
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  final _nameController = TextEditingController(text: 'CartNova User');
-  final _emailController = TextEditingController(text: 'user@example.com');
-  final _phoneController = TextEditingController(text: '+880 1XXXXXXXXX');
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   bool _isEditing = false;
+  bool _isSaving = false;
+  bool _isLoading = true;
+
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final user = await ref.read(authRepositoryProvider).getUser();
+
+      if (!mounted) return;
+
+      setState(() {
+        _user = user;
+        _setControllers(user);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  void _setControllers(User user) {
+    _nameController.text = user.name;
+    _emailController.text = user.email;
+    _phoneController.text = user.phone;
+  }
 
   @override
   void dispose() {
@@ -31,21 +73,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
     if (_nameController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty) {
       _showMessage('Name and email cannot be empty.');
       return;
     }
 
+    if (!_emailController.text.trim().contains('@')) {
+      _showMessage('Please enter a valid email address.');
+      return;
+    }
+
     setState(() {
-      _isEditing = false;
+      _isSaving = true;
     });
 
-    _showMessage('Profile updated successfully!');
+    try {
+      final updatedUser = await ref
+          .read(authRepositoryProvider)
+          .updateProfile(
+            name: _nameController.text.trim(),
+            email: _emailController.text.trim(),
+            phone: _phoneController.text.trim(),
+          );
+
+      if (!mounted) return;
+
+      setState(() {
+        _user = updatedUser;
+        _setControllers(updatedUser);
+        _isEditing = false;
+        _isSaving = false;
+      });
+
+      _showMessage('Profile updated successfully!');
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isSaving = false;
+      });
+
+      _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  void _cancelEditing() {
+    if (_user == null) return;
+
+    setState(() {
+      _setControllers(_user!);
+      _isEditing = false;
+    });
   }
 
   void _showMessage(String message) {
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -54,20 +139,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _cancelEditing() {
-    setState(() {
-      _isEditing = false;
-      _nameController.text = 'CartNova User';
-      _emailController.text = 'user@example.com';
-      _phoneController.text = '+880 1XXXXXXXXX';
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('My Profile')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.person_off_outlined, size: 55),
+              const SizedBox(height: 12),
+              const Text('Unable to load profile.'),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() => _isLoading = true);
+                  _loadProfile();
+                },
+                child: const Text('Try Again'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -78,15 +186,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           if (_isEditing)
             TextButton(
-              onPressed: _cancelEditing,
+              onPressed: _isSaving ? null : _cancelEditing,
               child: const Text('Cancel'),
             ),
           TextButton.icon(
-            onPressed: _isEditing ? _saveProfile : _toggleEdit,
-            icon: Icon(
-              _isEditing ? Icons.save_rounded : Icons.edit_rounded,
+            onPressed: _isSaving
+                ? null
+                : (_isEditing ? _saveProfile : _toggleEdit),
+            icon: _isSaving
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    _isEditing ? Icons.save_rounded : Icons.edit_rounded,
+                  ),
+            label: Text(
+              _isSaving ? 'Saving...' : (_isEditing ? 'Save' : 'Edit'),
             ),
-            label: Text(_isEditing ? 'Save' : 'Edit'),
           ),
           const SizedBox(width: 8),
         ],
@@ -108,7 +226,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     isWide,
                   ),
                   const SizedBox(height: 28),
-
                   if (isWide)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,9 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 26),
                     _buildAccountSettings(theme, colors),
                   ],
-
                   const SizedBox(height: 28),
-
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
@@ -187,10 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: EdgeInsets.all(isWide ? 30 : 22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            colors.primary,
-            colors.secondary,
-          ],
+          colors: [colors.primary, colors.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -397,10 +509,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: colors.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: colors.primary,
-                ),
+                child: Icon(icon, color: colors.primary),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -485,10 +594,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: colors.primaryContainer,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: colors.primary,
-          ),
+          child: Icon(icon, color: colors.primary),
         ),
         title: Text(
           title,
