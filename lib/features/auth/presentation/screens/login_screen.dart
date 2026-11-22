@@ -42,40 +42,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
   }
 
-  
-Future<void> _login() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() {
-    _isLoading = true;
-  });
+    setState(() => _isLoading = true);
 
-  try {
-    await ref.read(authRepositoryProvider).login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    try {
+      await ref.read(authRepositoryProvider).login(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-   
-    context.go('/');
+      context.go('/');
+    } catch (e) {
+      if (!mounted) return;
 
-  } catch (e) {
-    if (!mounted) return;
-
-    _showMessage(
-      e.toString().replaceFirst('Exception: ', ''),
-    );
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+      _showMessage(
+        e.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -366,22 +358,33 @@ Future<void> _login() async {
 
           const SizedBox(height: 12),
 
-          Row(
-            children: [
-              Checkbox(
-                value: _rememberMe,
-                onChanged: (value) {
-                  setState(() {
-                    _rememberMe = value ?? false;
-                  });
-                },
-              ),
-              const Text(
-                'Remember me',
-                style: TextStyle(fontSize: 13),
-              ),
-              const Spacer(),
-              TextButton(
+          // Responsive Remember Me and Forgot Password section.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 350;
+
+              final rememberMe = Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Checkbox(
+                    value: _rememberMe,
+                    visualDensity: VisualDensity.compact,
+                    onChanged: (value) {
+                      setState(() {
+                        _rememberMe = value ?? false;
+                      });
+                    },
+                  ),
+                  const Flexible(
+                    child: Text(
+                      'Remember me',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              );
+
+              final forgotPassword = TextButton(
                 onPressed: () {
                   _showMessage(
                     'Forgot password feature will be connected later.',
@@ -394,8 +397,29 @@ Future<void> _login() async {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-            ],
+              );
+
+              if (isCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    rememberMe,
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: forgotPassword,
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  rememberMe,
+                  const Spacer(),
+                  Flexible(child: forgotPassword),
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 19),
@@ -420,22 +444,25 @@ Future<void> _login() async {
                         color: Colors.white,
                       ),
                     )
-                  : const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Sign In',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                  : const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Sign In',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 10),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 19,
-                        ),
-                      ],
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 19,
+                          ),
+                        ],
+                      ),
                     ),
             ),
           ),
