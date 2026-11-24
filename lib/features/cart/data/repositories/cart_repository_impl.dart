@@ -1,80 +1,49 @@
-import 'package:cartnova_app/features/products/domain/entities/product.dart';
+
 import '../../domain/entities/cart_item.dart';
 import '../../domain/repositories/cart_repository.dart';
+import '../datasources/cart_remote_data_source.dart';
 
 class CartRepositoryImpl implements CartRepository {
-  final List<CartItem> _cartItems = [];
+  final CartRemoteDataSource remoteDataSource;
+
+  CartRepositoryImpl({
+    required this.remoteDataSource,
+  });
 
   @override
-  List<CartItem> getCartItems() {
-    return List.unmodifiable(_cartItems);
+  Future<List<CartItem>> getCartItems() {
+    return remoteDataSource.getCartItems();
   }
 
   @override
-  void addToCart(Product product) {
-    final index = _cartItems.indexWhere(
-      (item) => item.product.id == product.id,
-    );
-
-    if (index != -1) {
-      final existingItem = _cartItems[index];
-
-      _cartItems[index] = existingItem.copyWith(
-        quantity: existingItem.quantity + 1,
-      );
-    } else {
-      _cartItems.add(
-        CartItem(
-          product: product,
-          quantity: 1,
-        ),
-      );
-    }
-  }
-
-  @override
-  void removeFromCart(int productId) {
-    _cartItems.removeWhere(
-      (item) => item.product.id == productId,
+  Future<List<CartItem>> addToCart(
+    int productId, {
+    int quantity = 1,
+  }) {
+    return remoteDataSource.addToCart(
+      productId,
+      quantity: quantity,
     );
   }
 
   @override
-  void increaseQuantity(int productId) {
-    final index = _cartItems.indexWhere(
-      (item) => item.product.id == productId,
-    );
-
-    if (index != -1) {
-      final item = _cartItems[index];
-
-      _cartItems[index] = item.copyWith(
-        quantity: item.quantity + 1,
-      );
-    }
+  Future<List<CartItem>> removeFromCart(int cartItemId) {
+    return remoteDataSource.removeFromCart(cartItemId);
   }
 
   @override
-  void decreaseQuantity(int productId) {
-    final index = _cartItems.indexWhere(
-      (item) => item.product.id == productId,
+  Future<List<CartItem>> updateQuantity(
+    int cartItemId,
+    int quantity,
+  ) {
+    return remoteDataSource.updateQuantity(
+      cartItemId,
+      quantity,
     );
-
-    if (index != -1) {
-      final item = _cartItems[index];
-
-      if (item.quantity > 1) {
-        _cartItems[index] = item.copyWith(
-          quantity: item.quantity - 1,
-        );
-      } else {
-        _cartItems.removeAt(index);
-      }
-    }
   }
 
   @override
-  void clearCart() {
-    _cartItems.clear();
+  Future<List<CartItem>> clearCart() {
+    return remoteDataSource.clearCart();
   }
 }

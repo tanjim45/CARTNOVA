@@ -52,7 +52,10 @@ class OrderRepositoryImpl implements OrderRepository {
 
   Order _toEntity(OrderModel model) {
     final orderItems = model.items.map((item) {
+      final thumbnail = item['thumbnail'] as String;
+
       return CartItem(
+        cartItemId: 0,
         product: Product(
           id: (item['productId'] as num).toInt(),
           title: item['title'] as String,
@@ -63,8 +66,8 @@ class OrderRepositoryImpl implements OrderRepository {
           discountPercentage: 0,
           rating: 0,
           stock: 0,
-          thumbnail: item['thumbnail'] as String,
-          images: [item['thumbnail'] as String],
+          thumbnail: thumbnail,
+          images: [thumbnail],
         ),
         quantity: (item['quantity'] as num).toInt(),
       );

@@ -73,16 +73,19 @@ class CartScreen extends ConsumerWidget {
                       price: product.price,
                       quantity: item.quantity,
                       totalPrice: item.totalPrice,
-                      onDecrease: () =>
-                          cartNotifier.decreaseQuantity(product.id),
-                      onIncrease: () =>
-                          cartNotifier.increaseQuantity(product.id),
-                      onRemove: () =>
-                          _confirmRemoveItem(
-                            context,
-                            product.title,
-                            () => cartNotifier.removeFromCart(product.id),
-                          ),
+                      onDecrease: () => _runCartAction(
+                        context,
+                        () => cartNotifier.decreaseQuantity(product.id),
+                      ),
+                      onIncrease: () => _runCartAction(
+                        context,
+                        () => cartNotifier.increaseQuantity(product.id),
+                      ),
+                      onRemove: () => _confirmRemoveItem(
+                        context,
+                        product.title,
+                        () => cartNotifier.removeFromCart(product.id),
+                      ),
                     );
                   },
                 );
@@ -164,10 +167,25 @@ class CartScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _runCartAction(
+    BuildContext context,
+    Future<void> Function() action,
+  ) async {
+    try {
+      await action();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
+  }
+
   void _confirmRemoveItem(
     BuildContext context,
     String productName,
-    VoidCallback onConfirm,
+    Future<void> Function() onConfirm,
   ) {
     showDialog<void>(
       context: context,
@@ -184,9 +202,24 @@ class CartScreen extends ConsumerWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
-              onPressed: () {
-                onConfirm();
-                Navigator.pop(dialogContext);
+              onPressed: () async {
+                try {
+                  await onConfirm();
+
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+                } catch (e) {
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString())),
+                    );
+                  }
+                }
               },
               child: const Text('Remove'),
             ),
@@ -198,7 +231,7 @@ class CartScreen extends ConsumerWidget {
 
   void _confirmClearCart(
     BuildContext context,
-    VoidCallback onConfirm,
+    Future<void> Function() onConfirm,
   ) {
     showDialog<void>(
       context: context,
@@ -217,9 +250,24 @@ class CartScreen extends ConsumerWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
-              onPressed: () {
-                onConfirm();
-                Navigator.pop(dialogContext);
+              onPressed: () async {
+                try {
+                  await onConfirm();
+
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+                } catch (e) {
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString())),
+                    );
+                  }
+                }
               },
               child: const Text('Clear Cart'),
             ),

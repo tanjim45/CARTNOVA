@@ -24,7 +24,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     required String address,
     required String paymentMethod,
   }) async {
-    final items = cartRepository.getCartItems();
+    final items = await cartRepository.getCartItems();
 
     if (items.isEmpty) {
       throw Exception('Your cart is empty.');
@@ -53,7 +53,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
 
     await orderRepository.saveOrder(order);
 
-    cartRepository.clearCart();
+    await cartRepository.clearCart();
 
     return order;
   }

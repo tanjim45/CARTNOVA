@@ -1,55 +1,132 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../data/datasources/cart_remote_data_source.dart';
 import '../data/repositories/cart_repository_impl.dart';
 import '../domain/entities/cart_item.dart';
 import '../domain/repositories/cart_repository.dart';
 import '../../products/domain/entities/product.dart';
 
+final cartRemoteDataSourceProvider =
+    Provider<CartRemoteDataSource>((ref) {
+  return CartRemoteDataSource();
+});
+
 final cartRepositoryProvider = Provider<CartRepository>((ref) {
-  return CartRepositoryImpl();
+  return CartRepositoryImpl(
+    remoteDataSource: ref.watch(cartRemoteDataSourceProvider),
+  );
 });
 
 class CartNotifier extends StateNotifier<List<CartItem>> {
   final CartRepository _repository;
 
-  CartNotifier(this._repository)
-      : super(_repository.getCartItems());
+  bool isLoading = false;
+  String? errorMessage;
 
-  void addToCart(Product product, {int quantity = 1}) {
-  for (int i = 0; i < quantity; i++) {
-    _repository.addToCart(product);
+  CartNotifier(this._repository) : super([]) {
+    loadCart();
   }
 
-  _updateState();
-}
+  Future<void> loadCart() async {
+    isLoading = true;
+    errorMessage = null;
 
-  void removeFromCart(int productId) {
-    _repository.removeFromCart(productId);
-    _updateState();
+    try {
+      state = await _repository.getCartItems();
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+    }
   }
 
-  void increaseQuantity(int productId) {
-    _repository.increaseQuantity(productId);
-    _updateState();
+  Future<void> addToCart(
+    Product product, {
+    int quantity = 1,
+  }) async {
+    errorMessage = null;
+
+    try {
+      state = await _repository.addToCart(
+        product.id,
+        quantity: quantity,
+      );
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
   }
 
-  void decreaseQuantity(int productId) {
-    _repository.decreaseQuantity(productId);
-    _updateState();
+  Future<void> removeFromCart(int productId) async {
+    final item = state.firstWhere(
+      (item) => item.product.id == productId,
+    );
+
+    errorMessage = null;
+
+    try {
+      state = await _repository.removeFromCart(item.cartItemId);
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
   }
 
-  void clearCart() {
-    _repository.clearCart();
-    _updateState();
+  Future<void> increaseQuantity(int productId) async {
+    final item = state.firstWhere(
+      (item) => item.product.id == productId,
+    );
+
+    errorMessage = null;
+
+    try {
+      state = await _repository.updateQuantity(
+        item.cartItemId,
+        item.quantity + 1,
+      );
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
   }
 
-  void _updateState() {
-    state = _repository.getCartItems();
+  Future<void> decreaseQuantity(int productId) async {
+    final item = state.firstWhere(
+      (item) => item.product.id == productId,
+    );
+
+    errorMessage = null;
+
+    try {
+      if (item.quantity > 1) {
+        state = await _repository.updateQuantity(
+          item.cartItemId,
+          item.quantity - 1,
+        );
+      } else {
+        state = await _repository.removeFromCart(item.cartItemId);
+      }
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
   }
 
-  
+  Future<void> clearCart() async {
+    errorMessage = null;
+
+    try {
+      state = await _repository.clearCart();
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
+  }
+
   List<CartItem> get currentItems {
-  return List.unmodifiable(state);
-}
+    return List.unmodifiable(state);
+  }
 
   double get subtotal {
     return state.fold(

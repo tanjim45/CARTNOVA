@@ -1,16 +1,19 @@
-import 'package:cartnova_app/features/products/domain/entities/product.dart';
 import '../entities/cart_item.dart';
 
 abstract class CartRepository {
-  List<CartItem> getCartItems();
+  Future<List<CartItem>> getCartItems();
 
-  void addToCart(Product product);
+  Future<List<CartItem>> addToCart(
+    int productId, {
+    int quantity = 1,
+  });
 
-  void removeFromCart(int productId);
+  Future<List<CartItem>> removeFromCart(int cartItemId);
 
-  void increaseQuantity(int productId);
+  Future<List<CartItem>> updateQuantity(
+    int cartItemId,
+    int quantity,
+  );
 
-  void decreaseQuantity(int productId);
-
-  void clearCart();
+  Future<List<CartItem>> clearCart();
 }

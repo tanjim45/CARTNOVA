@@ -1,6 +1,5 @@
+
 import 'package:cartnova_app/features/products/domain/entities/product.dart';
-
-
 
 class ProductModel extends Product {
   const ProductModel({
@@ -18,22 +17,29 @@ class ProductModel extends Product {
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final thumbnail = json['thumbnail']?.toString() ?? '';
+
     return ProductModel(
-      id: (json['id'] as num?)?.toInt() ?? 0,
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       category: json['category']?.toString() ?? '',
       brand: json['brand']?.toString() ?? 'Unknown',
-      price: (json['price'] as num?)?.toDouble() ?? 0,
-      discountPercentage:
-          (json['discountPercentage'] as num?)?.toDouble() ?? 0,
-      rating: (json['rating'] as num?)?.toDouble() ?? 0,
-      stock: (json['stock'] as num?)?.toInt() ?? 0,
-      thumbnail: json['thumbnail']?.toString() ?? '',
+      price: double.tryParse(json['price']?.toString() ?? '') ?? 0,
+      discountPercentage: double.tryParse(
+            (json['discount_percentage'] ??
+                    json['discountPercentage'])
+                ?.toString() ??
+                '',
+          ) ??
+          0,
+      rating: double.tryParse(json['rating']?.toString() ?? '') ?? 0,
+      stock: int.tryParse(json['stock']?.toString() ?? '') ?? 0,
+      thumbnail: thumbnail,
       images: (json['images'] as List<dynamic>?)
               ?.map((image) => image.toString())
               .toList() ??
-          [],
+          (thumbnail.isNotEmpty ? [thumbnail] : []),
     );
   }
 }
