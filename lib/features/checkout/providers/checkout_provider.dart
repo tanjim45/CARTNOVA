@@ -1,5 +1,4 @@
 
-import 'package:cartnova_app/features/cart/providers/cart_provider.dart';
 import 'package:cartnova_app/features/checkout/data/repositories/checkout_repository_impl.dart';
 import 'package:cartnova_app/features/checkout/domain/entities/order.dart';
 import 'package:cartnova_app/features/checkout/domain/repositories/checkout_repository.dart';
@@ -8,11 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'order_provider.dart';
 
 final checkoutRepositoryProvider = Provider<CheckoutRepository>((ref) {
-  final cartRepository = ref.read(cartRepositoryProvider);
   final orderRepository = ref.read(orderRepositoryProvider);
 
   return CheckoutRepositoryImpl(
-    cartRepository: cartRepository,
     orderRepository: orderRepository,
   );
 });

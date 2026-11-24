@@ -1,21 +1,24 @@
 
-import 'package:cartnova_app/features/products/data/repositories/order_repository_impl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 
+import '../data/datasources/order_remote_data_source.dart';
+import '../data/repositories/order_repository_impl.dart';
 import '../domain/entities/order.dart';
 import '../domain/repositories/order_repository.dart';
-import '../data/datasources/order_local_data_source.dart';
 
-final orderLocalDataSourceProvider =
-    Provider<OrderLocalDataSource>((ref) {
-  return OrderLocalDataSource();
+final orderRemoteDataSourceProvider =
+    Provider<OrderRemoteDataSource>((ref) {
+  return OrderRemoteDataSource(
+    client: http.Client(),
+  );
 });
 
 final orderRepositoryProvider = Provider<OrderRepository>((ref) {
-  final dataSource = ref.watch(orderLocalDataSourceProvider);
+  final remoteDataSource = ref.watch(orderRemoteDataSourceProvider);
 
   return OrderRepositoryImpl(
-    localDataSource: dataSource,
+    remoteDataSource: remoteDataSource,
   );
 });
 
@@ -32,8 +35,7 @@ final orderDetailsProvider =
   return repository.getOrderById(orderId);
 });
 
-final cancelOrderProvider =
-    Provider<CancelOrder>((ref) {
+final cancelOrderProvider = Provider<CancelOrder>((ref) {
   final repository = ref.watch(orderRepositoryProvider);
 
   return CancelOrder(
@@ -62,10 +64,7 @@ class CancelOrder {
       throw Exception('Only pending orders can be cancelled.');
     }
 
-    await repository.updateOrderStatus(
-      orderId: orderId,
-      status: OrderStatus.cancelled,
-    );
+    await repository.cancelOrder(orderId);
 
     ref.invalidate(orderHistoryProvider);
     ref.invalidate(orderDetailsProvider(orderId));

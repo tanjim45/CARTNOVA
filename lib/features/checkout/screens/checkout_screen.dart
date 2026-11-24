@@ -1,6 +1,7 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cartnova_app/features/cart/providers/cart_provider.dart';
+import 'package:cartnova_app/features/checkout/providers/address_provider.dart';
 import 'package:cartnova_app/features/checkout/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +24,43 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   static const double deliveryCharge = 60.0;
 
   String _selectedPaymentMethod = 'Cash on Delivery';
+
+  int? _savedAddressId;
+  bool _isSavingAddress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedAddress();
+  }
+
+  Future<void> _loadSavedAddress() async {
+    try {
+      final addresses = await ref.read(savedAddressesProvider.future);
+
+      if (!mounted) return;
+
+      if (addresses.isNotEmpty) {
+        final savedAddress = addresses.first;
+
+        _nameController.text = savedAddress.fullName;
+        _phoneController.text = savedAddress.phone;
+        _addressController.text = savedAddress.address;
+
+        setState(() {
+          _savedAddressId = savedAddress.id;
+        });
+      }
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not load saved address: $error'),
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -108,7 +146,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
 
     final total = subtotal + deliveryCharge;
-    final isLoading = checkoutState.isLoading;
+    final isLoading = checkoutState.isLoading || _isSavingAddress;
 
     return Scaffold(
       appBar: AppBar(
@@ -585,12 +623,63 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Future<void> _placeOrder() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(checkoutProvider.notifier).placeOrder(
-          customerName: _nameController.text.trim(),
-          phone: _phoneController.text.trim(),
-          address: _addressController.text.trim(),
-          paymentMethod: _selectedPaymentMethod,
+    setState(() {
+      _isSavingAddress = true;
+    });
+
+    final fullName = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final address = _addressController.text.trim();
+
+    try {
+      final addressRepository = ref.read(
+        savedAddressRepositoryProvider,
+      );
+
+      if (_savedAddressId == null) {
+        final savedAddress = await addressRepository.saveAddress(
+          fullName: fullName,
+          phone: phone,
+          address: address,
         );
+
+        _savedAddressId = savedAddress.id;
+      } else {
+        await addressRepository.updateAddress(
+          id: _savedAddressId!,
+          fullName: fullName,
+          phone: phone,
+          address: address,
+        );
+      }
+
+      ref.invalidate(savedAddressesProvider);
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSavingAddress = false;
+      });
+
+      await ref.read(checkoutProvider.notifier).placeOrder(
+            customerName: fullName,
+            phone: phone,
+            address: address,
+            paymentMethod: _selectedPaymentMethod,
+          );
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isSavingAddress = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not save delivery address: $error'),
+        ),
+      );
+    }
   }
 }
 
