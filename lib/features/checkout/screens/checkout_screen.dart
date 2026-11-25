@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cartnova_app/features/cart/providers/cart_provider.dart';
 import 'package:cartnova_app/features/checkout/providers/address_provider.dart';
@@ -56,9 +55,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not load saved address: $error'),
-        ),
+        SnackBar(content: Text('Could not load saved address: $error')),
       );
     }
   }
@@ -87,9 +84,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     if (cartItems.isEmpty) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Checkout'),
-        ),
+        appBar: AppBar(title: const Text('Checkout')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -110,10 +105,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               const SizedBox(height: 22),
               const Text(
                 'Your Cart is Empty',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 10),
               Text(
@@ -179,10 +171,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     const SizedBox(height: 7),
                     Text(
                       'Complete your details and confirm your order.',
-                      style: TextStyle(
-                        color: colors.secondary,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: colors.secondary, fontSize: 14),
                     ),
                     const SizedBox(height: 26),
                     _CheckoutProgress(colors: colors),
@@ -202,10 +191,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             ),
                           ),
                           const SizedBox(width: 24),
-                          Expanded(
-                            flex: 5,
-                            child: summarySection,
-                          ),
+                          Expanded(flex: 5, child: summarySection),
                         ],
                       )
                     else
@@ -445,9 +431,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       : colors.surface,
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: selected
-                        ? colors.primary
-                        : colors.outlineVariant,
+                    color: selected ? colors.primary : colors.outlineVariant,
                     width: selected ? 1.8 : 1,
                   ),
                 ),
@@ -465,9 +449,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         children: [
                           Text(
                             method['name'] as String,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -527,13 +509,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         imageUrl: item.product.thumbnail,
                         fit: BoxFit.contain,
                         placeholder: (_, _) => const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        errorWidget: (_, _, _) => const Icon(
-                          Icons.image_not_supported_outlined,
-                        ),
+                        errorWidget: (_, _, _) =>
+                            const Icon(Icons.image_not_supported_outlined),
                       ),
                     ),
                   ),
@@ -610,6 +589,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Future<void> _placeOrder() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_isSavingAddress) return;
+
     setState(() {
       _isSavingAddress = true;
     });
@@ -619,9 +600,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final address = _addressController.text.trim();
 
     try {
-      final addressRepository = ref.read(
-        savedAddressRepositoryProvider,
-      );
+      final addressRepository = ref.read(savedAddressRepositoryProvider);
 
       if (_savedAddressId == null) {
         final savedAddress = await addressRepository.saveAddress(
@@ -648,26 +627,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         _isSavingAddress = false;
       });
 
-      await ref.read(checkoutProvider.notifier).placeOrder(
-        customerName: fullName,
-        phone: phone,
-        address: address,
-        paymentMethod: _selectedPaymentMethod,
+      context.push(
+        '/review-order',
+        extra: {
+          'customerName': fullName,
+          'phone': phone,
+          'address': address,
+          'paymentMethod': _selectedPaymentMethod,
+        },
       );
-
-      if (!mounted) return;
-
-      // Clear local cart state after successful order.
-      ref.read(cartProvider.notifier).clearLocalCart();
-
-      // Refresh order history.
-      ref.invalidate(orderHistoryProvider);
-
-      // Reset checkout state.
-      ref.read(checkoutProvider.notifier).reset();
-
-      // Navigate to Home.
-      context.go('/');
     } catch (error) {
       if (!mounted) return;
 
@@ -677,7 +645,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Checkout failed: $error'),
+          content: Text('Could not save address: $error'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -700,23 +668,15 @@ class _CheckoutProgress extends StatelessWidget {
           completed: true,
           colors: colors,
         ),
-        Expanded(
-          child: Container(height: 2, color: colors.primary),
-        ),
+        Expanded(child: Container(height: 2, color: colors.primary)),
         _ProgressStep(
           number: '2',
           label: 'Checkout',
           active: true,
           colors: colors,
         ),
-        Expanded(
-          child: Container(height: 2, color: colors.outlineVariant),
-        ),
-        _ProgressStep(
-          number: '3',
-          label: 'Complete',
-          colors: colors,
-        ),
+        Expanded(child: Container(height: 2, color: colors.outlineVariant)),
+        _ProgressStep(number: '3', label: 'Complete', colors: colors),
       ],
     );
   }
@@ -754,11 +714,7 @@ class _ProgressStep extends StatelessWidget {
           ),
           child: Center(
             child: completed
-                ? Icon(
-                    Icons.check_rounded,
-                    color: colors.onPrimary,
-                    size: 20,
-                  )
+                ? Icon(Icons.check_rounded, color: colors.onPrimary, size: 20)
                 : Text(
                     number,
                     style: TextStyle(
@@ -853,9 +809,7 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(23),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -886,10 +840,7 @@ class _SectionCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        color: colors.secondary,
-                        fontSize: 11,
-                      ),
+                      style: TextStyle(color: colors.secondary, fontSize: 11),
                     ),
                   ],
                 ),

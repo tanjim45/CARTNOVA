@@ -74,14 +74,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (_nameController.text.trim().isEmpty ||
-        _emailController.text.trim().isEmpty) {
-      _showMessage('Name and email cannot be empty.');
+    if (_nameController.text.trim().isEmpty) {
+      _showMessage('Name cannot be empty.');
       return;
     }
 
-    if (!_emailController.text.trim().contains('@')) {
-      _showMessage('Please enter a valid email address.');
+    if (_phoneController.text.trim().isEmpty) {
+      _showMessage('Phone number cannot be empty.');
       return;
     }
 
@@ -94,11 +93,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           .read(authRepositoryProvider)
           .updateProfile(
             name: _nameController.text.trim(),
-            email: _emailController.text.trim(),
+            email: _user!.email,
             phone: _phoneController.text.trim(),
           );
 
       if (!mounted) return;
+
+      ref.invalidate(authStatusProvider);
 
       setState(() {
         _user = updatedUser;
@@ -417,6 +418,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           controller: _emailController,
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
+          forceReadOnly: true,
         ),
         const SizedBox(height: 16),
         _buildField(
@@ -546,10 +548,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required TextEditingController controller,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    bool forceReadOnly = false,
   }) {
     return TextField(
       controller: controller,
-      readOnly: !_isEditing,
+      readOnly: forceReadOnly || !_isEditing,
       keyboardType: keyboardType,
       onChanged: (_) {
         setState(() {});

@@ -2,11 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../core/theme/theme_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../cart/providers/cart_provider.dart';
-import '../../cart/screens/cart_screen.dart';
 import '../../checkout/screens/order_history_screen.dart';
 import '../../notifications/screens/notifications_screen.dart';
 import '../../products/providers/product_provider.dart';
@@ -90,10 +88,8 @@ class HomeScreen extends ConsumerWidget {
               label: Text('$totalItems'),
               child: IconButton(
                 tooltip: 'Shopping Cart',
-                onPressed: () => _navigate(
-                  context,
-                  const CartScreen(),
-                ),
+               onPressed: () => context.push('/cart'),
+
                 icon: const Icon(Icons.shopping_cart_outlined),
               ),
             ),
@@ -183,10 +179,10 @@ class HomeScreen extends ConsumerWidget {
                       title: 'My Cart',
                       subtitle: 'Review your shopping cart',
                       badge: totalItems > 0 ? '$totalItems' : null,
-                      onTap: () => _openDrawerPage(
-                        context,
-                        const CartScreen(),
-                      ),
+                     onTap: () {
+                      Navigator.pop(context);
+                      context.push('/cart');
+                    },
                     ),
 
                     _DrawerMenuTile(
@@ -437,6 +433,10 @@ class HomeScreen extends ConsumerWidget {
 
                 try {
                   await ref.read(authRepositoryProvider).logout();
+
+                  // Clear previous user's cart and authentication state.
+                  ref.invalidate(cartProvider);
+                  ref.invalidate(authStatusProvider);
 
                   if (!context.mounted) return;
 

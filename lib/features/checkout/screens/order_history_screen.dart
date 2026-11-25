@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,26 +7,17 @@ import '../domain/entities/order.dart';
 import '../providers/order_provider.dart';
 import '../../orders/screens/order_tracking_screen.dart';
 
-enum OrderFilter {
-  all,
-  pending,
-  confirmed,
-  shipped,
-  delivered,
-  cancelled,
-}
+enum OrderFilter { all, pending, confirmed, shipped, delivered, cancelled }
 
 class OrderHistoryScreen extends ConsumerStatefulWidget {
   const OrderHistoryScreen({super.key});
 
   @override
-  ConsumerState<OrderHistoryScreen> createState() =>
-      _OrderHistoryScreenState();
+  ConsumerState<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
 }
 
 class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
-  final TextEditingController _searchController =
-      TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   OrderFilter _selectedFilter = OrderFilter.all;
   bool _newestFirst = true;
@@ -43,9 +33,10 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
 
     final filteredOrders = orders.where((order) {
       final matchesSearch =
+          order.orderNumber.toLowerCase().contains(searchText) ||
           order.id.toLowerCase().contains(searchText);
-
-      final matchesStatus = _selectedFilter == OrderFilter.all ||
+      final matchesStatus =
+          _selectedFilter == OrderFilter.all ||
           order.status.name == _selectedFilter.name;
 
       return matchesSearch && matchesStatus;
@@ -80,12 +71,9 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
         ],
       ),
       body: ordersAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (error, stackTrace) => _ErrorOrders(
-          onRetry: () => ref.invalidate(orderHistoryProvider),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) =>
+            _ErrorOrders(onRetry: () => ref.invalidate(orderHistoryProvider)),
         data: (orders) {
           if (orders.isEmpty) {
             return const _EmptyOrders();
@@ -123,22 +111,17 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                               controller: _searchController,
                               onChanged: (_) => setState(() {}),
                               decoration: InputDecoration(
-                                hintText: 'Search by Order ID...',
-                                prefixIcon: const Icon(
-                                  Icons.search_rounded,
-                                ),
-                                suffixIcon:
-                                    _searchController.text.isNotEmpty
-                                        ? IconButton(
-                                            onPressed: () {
-                                              _searchController.clear();
-                                              setState(() {});
-                                            },
-                                            icon: const Icon(
-                                              Icons.close_rounded,
-                                            ),
-                                          )
-                                        : null,
+                                hintText: 'Search by Order Number or ID...',
+                                prefixIcon: const Icon(Icons.search_rounded),
+                                suffixIcon: _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setState(() {});
+                                        },
+                                        icon: const Icon(Icons.close_rounded),
+                                      )
+                                    : null,
                                 filled: true,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -166,8 +149,9 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                                 Text(
                                   '${filteredOrders.length} found',
                                   style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme.secondary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.secondary,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -181,8 +165,7 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                               spacing: 8,
                               runSpacing: 8,
                               children: OrderFilter.values.map((filter) {
-                                final selected =
-                                    _selectedFilter == filter;
+                                final selected = _selectedFilter == filter;
 
                                 return FilterChip(
                                   label: Text(
@@ -205,16 +188,11 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                             // Date sorting
                             Row(
                               children: [
-                                const Icon(
-                                  Icons.sort_rounded,
-                                  size: 20,
-                                ),
+                                const Icon(Icons.sort_rounded, size: 20),
                                 const SizedBox(width: 8),
                                 const Text(
                                   'Sort by Date',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 const Spacer(),
                                 DropdownButton<bool>(
@@ -279,10 +257,7 @@ class _OrderHeader extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            colors.primary,
-            colors.primary.withValues(alpha: 0.78),
-          ],
+          colors: [colors.primary, colors.primary.withValues(alpha: 0.78)],
         ),
         borderRadius: BorderRadius.circular(24),
       ),
@@ -331,11 +306,7 @@ class _OrderHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Icon(
-            Icons.receipt_long_rounded,
-            size: 65,
-            color: Colors.white,
-          ),
+          const Icon(Icons.receipt_long_rounded, size: 65, color: Colors.white),
         ],
       ),
     );
@@ -362,10 +333,7 @@ class _OrderCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _cancelOrder(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _cancelOrder(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -437,9 +405,7 @@ class _OrderCard extends ConsumerWidget {
       color: colors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
-        side: BorderSide(
-          color: colors.outlineVariant.withValues(alpha: 0.55),
-        ),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.55)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -464,10 +430,7 @@ class _OrderCard extends ConsumerWidget {
                 const Expanded(
                   child: Text(
                     'Order Summary',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Container(
@@ -493,13 +456,13 @@ class _OrderCard extends ConsumerWidget {
             const SizedBox(height: 20),
             _OrderInfoLine(
               icon: Icons.tag_rounded,
-              text: 'Order ID: ${order.id}',
+              text:
+                  'Order Number: ${order.orderNumber.isNotEmpty ? order.orderNumber : order.id}',
             ),
             const SizedBox(height: 10),
             _OrderInfoLine(
               icon: Icons.calendar_today_rounded,
-              text: DateFormat('dd MMM yyyy, hh:mm a')
-                  .format(order.createdAt),
+              text: DateFormat('dd MMM yyyy, hh:mm a').format(order.createdAt),
             ),
             const SizedBox(height: 10),
             _OrderInfoLine(
@@ -521,9 +484,7 @@ class _OrderCard extends ConsumerWidget {
                       Flexible(
                         child: Text(
                           '${order.items.length} products',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -553,10 +514,7 @@ class _OrderCard extends ConsumerWidget {
                     builder: (_) => _OrderDetailsSheet(order: order),
                   );
                 },
-                icon: const Icon(
-                  Icons.visibility_outlined,
-                  size: 18,
-                ),
+                icon: const Icon(Icons.visibility_outlined, size: 18),
                 label: const Text('View Order Details'),
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
@@ -650,10 +608,7 @@ class _OrderInfoLine extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _OrderInfoLine({
-    required this.icon,
-    required this.text,
-  });
+  const _OrderInfoLine({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -668,10 +623,7 @@ class _OrderInfoLine extends StatelessWidget {
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              color: colors.secondary,
-            ),
+            style: TextStyle(fontSize: 12, color: colors.secondary),
           ),
         ),
       ],
@@ -711,18 +663,12 @@ class _OrderDetailsSheet extends StatelessWidget {
             const SizedBox(height: 24),
             const Text(
               'Order Details',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text(
-              'Order ID: ${order.id}',
-              style: TextStyle(
-                color: colors.secondary,
-                fontSize: 12,
-              ),
+              'Order Number: ${order.orderNumber.isNotEmpty ? order.orderNumber : order.id}',
+              style: TextStyle(color: colors.secondary, fontSize: 12),
             ),
             const SizedBox(height: 24),
             _InfoCard(
@@ -737,10 +683,7 @@ class _OrderDetailsSheet extends StatelessWidget {
             const SizedBox(height: 24),
             const Text(
               'Purchased Products',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 14),
             ...order.items.map(
@@ -770,9 +713,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                           width: 65,
                           height: 65,
                           color: colors.surfaceContainerHighest,
-                          child: const Icon(
-                            Icons.image_not_supported_outlined,
-                          ),
+                          child: const Icon(Icons.image_not_supported_outlined),
                         ),
                       ),
                     ),
@@ -785,9 +726,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                             item.product.title,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 5),
                           Text(
@@ -803,9 +742,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       '\$${item.totalPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -816,10 +753,7 @@ class _OrderDetailsSheet extends StatelessWidget {
               icon: Icons.receipt_outlined,
               title: 'Payment Summary',
               children: [
-                _InfoRow(
-                  title: 'Payment',
-                  value: order.paymentMethod,
-                ),
+                _InfoRow(title: 'Payment', value: order.paymentMethod),
                 const SizedBox(height: 12),
                 _DetailRow(
                   title: 'Subtotal',
@@ -906,10 +840,7 @@ class _InfoRow extends StatelessWidget {
   final String title;
   final String value;
 
-  const _InfoRow({
-    required this.title,
-    required this.value,
-  });
+  const _InfoRow({required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -931,10 +862,7 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
             ),
           ),
         ],
@@ -994,18 +922,11 @@ class _ErrorOrders extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.cloud_off_rounded,
-              size: 65,
-              color: colors.error,
-            ),
+            Icon(Icons.cloud_off_rounded, size: 65, color: colors.error),
             const SizedBox(height: 18),
             const Text(
               'Unable to load orders',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -1054,19 +975,13 @@ class _EmptyOrders extends StatelessWidget {
             const SizedBox(height: 24),
             const Text(
               'No Orders Yet',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 9),
             Text(
               'Your order history will appear here once you make your first purchase.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.secondary,
-                height: 1.5,
-              ),
+              style: TextStyle(color: colors.secondary, height: 1.5),
             ),
           ],
         ),
@@ -1087,18 +1002,11 @@ class _NoMatchingOrders extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 55),
         child: Column(
           children: [
-            Icon(
-              Icons.search_off_rounded,
-              size: 65,
-              color: colors.secondary,
-            ),
+            Icon(Icons.search_off_rounded, size: 65, color: colors.secondary),
             const SizedBox(height: 16),
             const Text(
               'No Matching Orders',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(

@@ -1,4 +1,6 @@
-
+import 'package:cartnova_app/features/cart/screens/cart_screen.dart';
+import 'package:cartnova_app/features/checkout/screens/checkout_screen.dart';
+import 'package:cartnova_app/features/checkout/screens/review_order_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -23,6 +25,30 @@ final GoRouter appRouter = GoRouter(
       path: '/',
       name: 'home',
       builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/cart',
+      name: 'cart',
+      builder: (context, state) => const CartScreen(),
+    ),
+    GoRoute(
+      path: '/checkout',
+      name: 'checkout',
+      builder: (context, state) => const CheckoutScreen(),
+    ),
+    GoRoute(
+      path: '/review-order',
+      name: 'review-order',
+      builder: (context, state) {
+        final data = state.extra as Map<String, String>;
+
+        return ReviewOrderScreen(
+          customerName: data['customerName']!,
+          phone: data['phone']!,
+          address: data['address']!,
+          paymentMethod: data['paymentMethod']!,
+        );
+      },
     ),
     GoRoute(
       path: '/login',

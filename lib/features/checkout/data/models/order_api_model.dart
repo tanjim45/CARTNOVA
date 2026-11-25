@@ -32,7 +32,6 @@ class OrderApiModel {
     required this.items,
   });
 
-  // Handles both numeric values and numeric strings from Laravel.
   static double _toDouble(dynamic value) {
     if (value == null) return 0.0;
     if (value is num) return value.toDouble();
@@ -70,8 +69,7 @@ class OrderApiModel {
 
   Order toEntity() {
     final orderItems = items.map((item) {
-      final thumbnail =
-          item['product_thumbnail']?.toString() ?? '';
+      final thumbnail = item['product_thumbnail']?.toString() ?? '';
 
       return CartItem(
         cartItemId: _toInt(item['id']),
@@ -94,6 +92,7 @@ class OrderApiModel {
 
     return Order(
       id: id.toString(),
+      orderNumber: orderNumber,
       customerName: customerName,
       phone: phone,
       address: address,

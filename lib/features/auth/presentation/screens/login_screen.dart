@@ -1,4 +1,4 @@
-
+import 'package:cartnova_app/features/cart/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,10 +48,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authRepositoryProvider).login(
+      await ref
+          .read(authRepositoryProvider)
+          .login(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
+
+      // Reload authentication and cart for the newly logged-in user.
+      ref.invalidate(authStatusProvider);
+      ref.invalidate(cartProvider);
 
       if (!mounted) return;
 
@@ -59,9 +65,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage(
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      _showMessage(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -88,16 +92,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: _buildWelcomePanel(colors),
-                        ),
+                        Expanded(child: _buildWelcomePanel(colors)),
                         const SizedBox(width: 45),
                         Expanded(
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxWidth: 440,
-                              ),
+                              constraints: const BoxConstraints(maxWidth: 440),
                               child: _buildLoginForm(colors),
                             ),
                           ),
@@ -146,9 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.17),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: const Icon(
               Icons.shopping_bag_rounded,
@@ -188,10 +186,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Easy and convenient ordering',
           ),
           const SizedBox(height: 18),
-          _welcomeFeature(
-            Icons.favorite_rounded,
-            'Save products you love',
-          ),
+          _welcomeFeature(Icons.favorite_rounded, 'Save products you love'),
           const SizedBox(height: 35),
           Container(
             padding: const EdgeInsets.all(17),
@@ -301,9 +296,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 return 'Please enter your email';
               }
 
-              if (!RegExp(
-                r'^[^@]+@[^@]+\.[^@]+$',
-              ).hasMatch(value.trim())) {
+              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value.trim())) {
                 return 'Please enter a valid email';
               }
 
@@ -323,26 +316,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             onFieldSubmitted: (_) {
               if (!_isLoading) _login();
             },
-            decoration: _inputDecoration(
-              hint: 'Enter your password',
-              icon: Icons.lock_outline_rounded,
-            ).copyWith(
-              suffixIcon: IconButton(
-                tooltip: _obscurePassword
-                    ? 'Show password'
-                    : 'Hide password',
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
+            decoration:
+                _inputDecoration(
+                  hint: 'Enter your password',
+                  icon: Icons.lock_outline_rounded,
+                ).copyWith(
+                  suffixIcon: IconButton(
+                    tooltip: _obscurePassword
+                        ? 'Show password'
+                        : 'Hide password',
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                  ),
                 ),
-              ),
-            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your password';
@@ -376,10 +370,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     },
                   ),
                   const Flexible(
-                    child: Text(
-                      'Remember me',
-                      style: TextStyle(fontSize: 13),
-                    ),
+                    child: Text('Remember me', style: TextStyle(fontSize: 13)),
                   ),
                 ],
               );
@@ -392,10 +383,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
                 child: const Text(
                   'Forgot Password?',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               );
 
@@ -457,10 +445,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 19,
-                          ),
+                          Icon(Icons.arrow_forward_rounded, size: 19),
                         ],
                       ),
                     ),
@@ -476,17 +461,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 Text(
                   "Don't have an account? ",
-                  style: TextStyle(
-                    color: colors.onSurfaceVariant,
-                  ),
+                  style: TextStyle(color: colors.onSurfaceVariant),
                 ),
                 TextButton(
                   onPressed: () => context.goNamed('register'),
                   child: const Text(
                     'Create Account',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -502,10 +483,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _fieldLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
-        fontWeight: FontWeight.w600,
-        fontSize: 14,
-      ),
+      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
     );
   }
 
@@ -520,10 +498,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       prefixIcon: Icon(icon),
       filled: true,
       fillColor: colors.surfaceContainerLow,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 18,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
         borderSide: BorderSide.none,
@@ -536,23 +511,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: colors.primary,
-          width: 1.5,
-        ),
+        borderSide: BorderSide(color: colors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: colors.error,
-        ),
+        borderSide: BorderSide(color: colors.error),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: colors.error,
-          width: 1.5,
-        ),
+        borderSide: BorderSide(color: colors.error, width: 1.5),
       ),
     );
   }

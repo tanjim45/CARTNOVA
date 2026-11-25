@@ -11,6 +11,7 @@ enum OrderStatus {
 
 class Order {
   final String id;
+  final String orderNumber;
   final String customerName;
   final String phone;
   final String address;
@@ -24,6 +25,7 @@ class Order {
 
   const Order({
     required this.id,
+    this.orderNumber = '',
     required this.customerName,
     required this.phone,
     required this.address,

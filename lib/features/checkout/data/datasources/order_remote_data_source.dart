@@ -42,6 +42,8 @@ class OrderRemoteDataSource {
     return decoded;
   }
 
+
+  
   // Place order
   Future<OrderApiModel> placeOrder({
     required String customerName,
@@ -60,9 +62,15 @@ class OrderRemoteDataSource {
       }),
     );
 
+    debugPrint('========== PLACE ORDER DEBUG ==========');
+    debugPrint('STATUS CODE: ${response.statusCode}');
+    debugPrint('RESPONSE BODY: ${response.body}');
+
     final body = _decodeResponse(response.body);
 
-    if (response.statusCode == 201 && body['data'] != null) {
+    if (response.statusCode >= 200 &&
+        response.statusCode < 300 &&
+        body['data'] != null) {
       return OrderApiModel.fromJson(
         Map<String, dynamic>.from(body['data'] as Map),
       );
@@ -72,6 +80,7 @@ class OrderRemoteDataSource {
       body['message'] ?? 'Failed to place order.',
     );
   }
+
 
   // Get order history
   Future<List<OrderApiModel>> getOrders() async {

@@ -1,8 +1,7 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cartnova_app/features/checkout/screens/checkout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/cart_provider.dart';
 
@@ -96,13 +95,8 @@ class CartScreen extends ConsumerWidget {
                   deliveryCharge: deliveryCharge,
                   total: total,
                   onCheckout: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const CheckoutScreen(),
-                      ),
-                    );
-                  },
+                      context.push('/checkout');
+                    },
                   onClearCart: () => _confirmClearCart(
                     context,
                     cartNotifier.clearCart,
