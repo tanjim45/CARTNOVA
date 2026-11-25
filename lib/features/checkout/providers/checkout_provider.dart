@@ -19,7 +19,7 @@ class CheckoutNotifier extends StateNotifier<AsyncValue<Order?>> {
 
   CheckoutNotifier(this._repository) : super(const AsyncData(null));
 
-  Future<void> placeOrder({
+  Future<Order> placeOrder({
     required String customerName,
     required String phone,
     required String address,
@@ -36,8 +36,11 @@ class CheckoutNotifier extends StateNotifier<AsyncValue<Order?>> {
       );
 
       state = AsyncData(order);
+
+      return order;
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 

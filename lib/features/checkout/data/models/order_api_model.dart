@@ -32,17 +32,29 @@ class OrderApiModel {
     required this.items,
   });
 
+  // Handles both numeric values and numeric strings from Laravel.
+  static double _toDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0.0;
+  }
+
+  static int _toInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
   factory OrderApiModel.fromJson(Map<String, dynamic> json) {
     return OrderApiModel(
-      id: (json['id'] as num).toInt(),
+      id: _toInt(json['id']),
       orderNumber: json['order_number']?.toString() ?? '',
       customerName: json['customer_name']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
-      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0,
-      deliveryCharge:
-          (json['delivery_charge'] as num?)?.toDouble() ?? 0,
-      total: (json['total'] as num?)?.toDouble() ?? 0,
+      subtotal: _toDouble(json['subtotal']),
+      deliveryCharge: _toDouble(json['delivery_charge']),
+      total: _toDouble(json['total']),
       paymentMethod:
           json['payment_method']?.toString() ?? 'Cash on Delivery',
       status: json['status']?.toString() ?? 'pending',
@@ -58,24 +70,25 @@ class OrderApiModel {
 
   Order toEntity() {
     final orderItems = items.map((item) {
-      final thumbnail = item['product_thumbnail']?.toString() ?? '';
+      final thumbnail =
+          item['product_thumbnail']?.toString() ?? '';
 
       return CartItem(
-        cartItemId: (item['id'] as num?)?.toInt() ?? 0,
+        cartItemId: _toInt(item['id']),
         product: Product(
-          id: (item['product_id'] as num?)?.toInt() ?? 0,
+          id: _toInt(item['product_id']),
           title: item['product_title']?.toString() ?? '',
           description: '',
           category: '',
           brand: 'Unknown',
-          price: (item['price'] as num?)?.toDouble() ?? 0,
+          price: _toDouble(item['price']),
           discountPercentage: 0,
           rating: 0,
           stock: 0,
           thumbnail: thumbnail,
           images: thumbnail.isEmpty ? [] : [thumbnail],
         ),
-        quantity: (item['quantity'] as num?)?.toInt() ?? 0,
+        quantity: _toInt(item['quantity']),
       );
     }).toList();
 

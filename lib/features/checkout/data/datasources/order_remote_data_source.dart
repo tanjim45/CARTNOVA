@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:cartnova_app/core/constants/api_constants.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -74,31 +75,34 @@ class OrderRemoteDataSource {
 
   // Get order history
   Future<List<OrderApiModel>> getOrders() async {
-    final response = await client.get(
-      Uri.parse('${ApiConstants.baseUrl}/orders'),
-      headers: await _getHeaders(),
-    );
+  final response = await client.get(
+    Uri.parse('${ApiConstants.baseUrl}/orders'),
+    headers: await _getHeaders(),
+  );
 
-    final body = _decodeResponse(response.body);
+  debugPrint('========== ORDER HISTORY DEBUG ==========');
+  debugPrint('STATUS CODE: ${response.statusCode}');
+  debugPrint('RESPONSE BODY: ${response.body}');
 
-    if (response.statusCode == 200) {
-      final data = body['data'];
+  final body = _decodeResponse(response.body);
 
-      // Laravel pagination response
-      final List<dynamic> orderList =
-          data is Map ? data['data'] as List? ?? [] : data as List? ?? [];
+  if (response.statusCode == 200) {
+    final data = body['data'];
 
-      return orderList.map((item) {
-        return OrderApiModel.fromJson(
-          Map<String, dynamic>.from(item as Map),
-        );
-      }).toList();
-    }
+    final List<dynamic> orderList =
+        data is Map ? data['data'] as List? ?? [] : data as List? ?? [];
 
-    throw Exception(
-      body['message'] ?? 'Failed to load orders.',
-    );
+    debugPrint('ORDERS FOUND: ${orderList.length}');
+
+    return orderList.map((item) {
+      return OrderApiModel.fromJson(
+        Map<String, dynamic>.from(item as Map),
+      );
+    }).toList();
   }
+
+  throw Exception(body['message'] ?? 'Failed to load orders.');
+}
 
   // Get single order
   Future<OrderApiModel> getOrderById(String orderId) async {

@@ -24,20 +24,32 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
   bool isLoading = false;
   String? errorMessage;
 
+  int _requestVersion = 0;
+
   CartNotifier(this._repository) : super([]) {
     loadCart();
   }
 
   Future<void> loadCart() async {
+    final requestVersion = ++_requestVersion;
+
     isLoading = true;
     errorMessage = null;
 
     try {
-      state = await _repository.getCartItems();
+      final items = await _repository.getCartItems();
+
+      if (requestVersion == _requestVersion) {
+        state = items;
+      }
     } catch (e) {
-      errorMessage = e.toString();
+      if (requestVersion == _requestVersion) {
+        errorMessage = e.toString();
+      }
     } finally {
-      isLoading = false;
+      if (requestVersion == _requestVersion) {
+        isLoading = false;
+      }
     }
   }
 
@@ -114,7 +126,11 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
   }
 
   Future<void> clearCart() async {
+    ++_requestVersion;
+    isLoading = false;
     errorMessage = null;
+
+    state = [];
 
     try {
       state = await _repository.clearCart();
@@ -122,6 +138,13 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       errorMessage = e.toString();
       rethrow;
     }
+  }
+
+  void clearLocalCart() {
+    ++_requestVersion;
+    isLoading = false;
+    errorMessage = null;
+    state = [];
   }
 
   List<CartItem> get currentItems {

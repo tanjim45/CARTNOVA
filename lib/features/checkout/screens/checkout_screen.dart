@@ -5,6 +5,7 @@ import 'package:cartnova_app/features/checkout/providers/address_provider.dart';
 import 'package:cartnova_app/features/checkout/providers/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/checkout_provider.dart';
 
@@ -80,25 +81,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     final cartItems = ref.watch(cartProvider);
     final checkoutState = ref.watch(checkoutProvider);
-    final order = checkoutState.valueOrNull;
 
     final colors = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
 
-    if (order != null) {
-      return _OrderSuccessScreen(
-        orderId: order.id,
-        paymentMethod: order.paymentMethod,
-        onContinue: () {
-          ref.read(checkoutProvider.notifier).reset();
-          Navigator.pop(context);
-        },
-      );
-    }
-
     if (cartItems.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Checkout')),
+        appBar: AppBar(
+          title: const Text('Checkout'),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -131,7 +122,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
               const SizedBox(height: 20),
               FilledButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => context.go('/'),
                 child: const Text('Continue Shopping'),
               ),
             ],
@@ -196,7 +187,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     const SizedBox(height: 26),
                     _CheckoutProgress(colors: colors),
                     const SizedBox(height: 30),
-
                     if (isWide)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +218,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           summarySection,
                         ],
                       ),
-
                     if (checkoutState.hasError) ...[
                       const SizedBox(height: 18),
                       Container(
@@ -257,9 +246,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         ),
                       ),
                     ],
-
                     const SizedBox(height: 26),
-
                     SizedBox(
                       width: double.infinity,
                       height: 59,
@@ -662,11 +649,25 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       });
 
       await ref.read(checkoutProvider.notifier).placeOrder(
-            customerName: fullName,
-            phone: phone,
-            address: address,
-            paymentMethod: _selectedPaymentMethod,
-          );
+        customerName: fullName,
+        phone: phone,
+        address: address,
+        paymentMethod: _selectedPaymentMethod,
+      );
+
+      if (!mounted) return;
+
+      // Clear local cart state after successful order.
+      ref.read(cartProvider.notifier).clearLocalCart();
+
+      // Refresh order history.
+      ref.invalidate(orderHistoryProvider);
+
+      // Reset checkout state.
+      ref.read(checkoutProvider.notifier).reset();
+
+      // Navigate to Home.
+      context.go('/');
     } catch (error) {
       if (!mounted) return;
 
@@ -676,7 +677,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not save delivery address: $error'),
+          content: Text('Checkout failed: $error'),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -941,144 +943,6 @@ class _SummaryRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _OrderSuccessScreen extends StatelessWidget {
-  final String orderId;
-  final String paymentMethod;
-  final VoidCallback onContinue;
-
-  const _OrderSuccessScreen({
-    required this.orderId,
-    required this.paymentMethod,
-    required this.onContinue,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 125,
-                  height: 125,
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    size: 78,
-                    color: colors.primary,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                const Text(
-                  'Order Placed Successfully!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Thank you for shopping with CartNova. '
-                  'Your order has been saved successfully.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: colors.secondary,
-                    height: 1.6,
-                  ),
-                ),
-                const SizedBox(height: 26),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(21),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: colors.outlineVariant),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'YOUR ORDER ID',
-                        style: TextStyle(
-                          fontSize: 11,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.w900,
-                          color: colors.secondary,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SelectableText(
-                        orderId,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: colors.primary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Divider(color: colors.outlineVariant),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.payment_rounded,
-                            color: colors.primary,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Payment Method',
-                              style: TextStyle(color: colors.secondary),
-                            ),
-                          ),
-                          Flexible(
-                            child: Text(
-                              paymentMethod,
-                              textAlign: TextAlign.end,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: FilledButton.icon(
-                    onPressed: onContinue,
-                    icon: const Icon(Icons.shopping_bag_outlined),
-                    label: const Text(
-                      'Continue Shopping',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
