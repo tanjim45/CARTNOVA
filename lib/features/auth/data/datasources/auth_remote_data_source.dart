@@ -76,6 +76,42 @@ class AuthRemoteDataSource {
     return _handleResponse(response);
   }
 
+  // Forgot Password API
+  Future<Map<String, dynamic>> forgotPassword({
+    required String email,
+  }) async {
+    final response = await client.post(
+      Uri.parse('${ApiConstants.baseUrl}/forgot-password'),
+      headers: _headers,
+      body: jsonEncode({
+        'email': email,
+      }),
+    );
+
+    return _handleResponse(response);
+  }
+
+  // Reset Password API
+  Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String token,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await client.post(
+      Uri.parse('${ApiConstants.baseUrl}/reset-password'),
+      headers: _headers,
+      body: jsonEncode({
+        'email': email,
+        'token': token,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      }),
+    );
+
+    return _handleResponse(response);
+  }
+
   Future<Map<String, dynamic>> getUser(String token) async {
     final response = await client.get(
       Uri.parse(ApiConstants.user),

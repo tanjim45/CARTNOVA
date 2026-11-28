@@ -15,6 +15,17 @@ abstract class AuthRepository {
     required String passwordConfirmation,
   });
 
+  Future<void> forgotPassword({
+    required String email,
+  });
+
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String password,
+    required String passwordConfirmation,
+  });
+
   Future<User> getUser();
 
   Future<User> updateProfile({

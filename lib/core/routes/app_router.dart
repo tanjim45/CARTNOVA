@@ -1,3 +1,5 @@
+import 'package:cartnova_app/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:cartnova_app/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:cartnova_app/features/cart/screens/cart_screen.dart';
 import 'package:cartnova_app/features/checkout/screens/checkout_screen.dart';
 import 'package:cartnova_app/features/checkout/screens/review_order_screen.dart';
@@ -54,6 +56,16 @@ final GoRouter appRouter = GoRouter(
       path: '/login',
       name: 'login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      name: 'forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      name: 'reset-password',
+      builder: (context, state) => const ResetPasswordScreen(),
     ),
     GoRoute(
       path: '/register',

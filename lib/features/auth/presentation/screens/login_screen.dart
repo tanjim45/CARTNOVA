@@ -374,13 +374,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ],
               );
-
               final forgotPassword = TextButton(
-                onPressed: () {
-                  _showMessage(
-                    'Forgot password feature will be connected later.',
-                  );
-                },
+                onPressed: () => context.push('/forgot-password'),
                 child: const Text(
                   'Forgot Password?',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),

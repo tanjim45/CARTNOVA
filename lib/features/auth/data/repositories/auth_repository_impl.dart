@@ -26,7 +26,6 @@ class AuthRepositoryImpl implements AuthRepository {
     );
   }
 
-  // Extract User Data from different API response structures
   Map<String, dynamic> _extractUserJson(
     Map<String, dynamic> response,
   ) {
@@ -51,7 +50,6 @@ class AuthRepositoryImpl implements AuthRepository {
     return response;
   }
 
-  // Save Login/Register Data
   Future<User> _saveAuthData(
     Map<String, dynamic> response,
   ) async {
@@ -109,6 +107,32 @@ class AuthRepositoryImpl implements AuthRepository {
     return _saveAuthData(response);
   }
 
+  // Forgot Password
+  @override
+  Future<void> forgotPassword({
+    required String email,
+  }) async {
+    await remoteDataSource.forgotPassword(
+      email: email,
+    );
+  }
+
+  // Reset Password
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    await remoteDataSource.resetPassword(
+      email: email,
+      token: token,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+    );
+  }
+
   // Get Logged-in User
   @override
   Future<User> getUser() async {
@@ -120,7 +144,6 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     final response = await remoteDataSource.getUser(token);
-
     final userJson = _extractUserJson(response);
 
     return _mapUser(userJson);
